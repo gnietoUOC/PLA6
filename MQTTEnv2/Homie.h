@@ -1,75 +1,97 @@
 #ifndef HOMIE_H
 #define HOMIE_H
 
+#define MAX_DEVICES     1
 #define MAX_NODES       2
 #define MAX_PROPERTIES  6
+#define NA              -99.99
+#define SERVER          "192.168.0.173"
+#define MQPORT          1883           
+#define MQRETAIN        false
+#define USERNAME        "genaro"
+#define PWD             "passw0rd"
+#define WILLTOPIC       "MKR1000"
+#define WILLMESSAGE     "ATPC"
 
-#define SERVER      "192.168.0.173"
-#define MQPORT  1883           
-#define USERNAME    "genaro"
-#define PWD         "passw0rd"
-#define CLIENT      "mkr1000"
+#define CLIENT          "mkr1000"
 
-//#include <vector>
+//#define MKCLOCK           48000000
+//#define MKPERIOD          1 // 1sg
+#define MQPERIOD          1000 // 1sg
+
+#define ENV_PROPS       3
+
 #include <cstdlib> 
-//#include <stdio.h>
 
 #include <Arduino.h>
 #include <WiFi101.h>
 #include <PubSubClient.h>
+//#include "Adafruit_ZeroTimer.h"
+#include <Arduino_MKRENV.h>
+
+class Device;
+class Node;
+class Property;
 
 class Base {
   public:
 //    Base (PubSubClient *client, char* name);
-//    Base (PubSubClient *client, char* name, char *units, bool settable);
-    Base (PubSubClient *client, char* name);
+    Base (PubSubClient *client);
     Base (Base *parent, char* name);
-//    Base (char* name, char *units, bool settable);
-//    Base (PubSubClient *client, char* name, char *units, bool settable);
     Base (Base *parent, char* name, char *units, bool settable);
 
     char* getName();
     void setName(char *name);
-    char* getUnits();
-    void setUnits(char *units);
-    bool getSettable();
-    void setSettable(bool settable);
-    void setParent(Base *parent);
+//    float *getValue();
+//    void setValue(float value);
     Base *getParent();
-    void getPath(char *path);
+    void setParent(Base *parent);
     void setClient(PubSubClient *client);
     PubSubClient *getClient();
+    virtual void update() {};
+    virtual void dump() {};
+//    Base **getChildren();
+//    Base *getChildren(char *name);
+//    void addChildren(Base *);
+
+    void getPath(char *path);
+    void process(char *topic,char *payload);
+    void pub(char *tag, char *value);
 
   private:
     char* name;
-    bool settable;
-    char* units;
-    char* type;  
+ //   float* value;
     Base *parent;
     PubSubClient *client;
 
-    void pub(char *tag, char *value);
 };
 
-class Property : public Base {
+class Homie : public Base {
 
   public:
-//    Property(char *name, char *units, bool settable);
-//    Property(PubSubClient *client, char *name, char *units, bool settable);
-    Property(Base *parent, char *name, char *units, bool settable);
+    Homie(PubSubClient *client);
+    Device **getDevices();
+    void addDevice(Device *d);
+    void update();
     void dump();
 
+  private:
+    int n;
+    Device **devices;  
+    static void callback(char* topic, byte* payload, unsigned int length);
+  
 };
 
 class Node : public Base {
 
   public:
-
-//    Node(PubSubClient *client, char *name);
-//    Node(char *name);
-    Node(Base *parent, char* name);
+    Node(Device *parent, char* name);
+//    Node(PubSubClient *client, char* name);
+    Node(Homie *parent, char* name);
     Property** getProperties();
     void addProperty(Property *p);
+    
+    void update();
     void dump();
 
   private: 
@@ -79,15 +101,17 @@ class Node : public Base {
   
 };
 
-class Device : public Base {
+class Device : public Node {
 
   public:
-    Device(PubSubClient *client, char *name);
-//    Device(char *name);
+//    Device(PubSubClient *client, char *name);
+    Device(Homie *parent, char *name);
     Node** getNodes();
     void addNode(Node *n);
+
+    void update();
     void dump();
-    void init();
+    
 
   private: 
     int n;
@@ -95,25 +119,62 @@ class Device : public Base {
   
 };
 
+class Property : public Base {
+
+  public:
+    Property(Node *parent, char *name, char *units, bool settable);
+    float getValue();
+    void setValue(float value);
+    int getIValue();
+    void setIValue(int value);
+    char* getUnits();
+    void setUnits(char *units);
+    bool getSettable();
+    void setSettable(bool settable);
+    
+    void dump();
+
+  private:
+    float value;
+    int ivalue;
+    bool settable;
+    char* units;
+    char* type;  
+
+};
+
 class Temperature : public Property {
 
   public:
-//    Temperature(PubSubClient *client);
-    Temperature(Base *parent);
-//    Temperature();
+    Temperature(Node *parent);
+    void update();
 };
 
 class Humidity : public Property {
   public:
-    Humidity(Base *parent);
-//    Humidity();
+    Humidity(Node *parent);
+    void update();
 };
 
 class Pressure : public Property {
 
   public:
-    Pressure(Base *parent);
-//    Pressure();
+    Pressure(Node *parent);
+    void update();
+};
+
+class Memory : public Property {
+
+  public:
+    Memory(Device *parent);
+    void update();
+};
+
+class LED : public Property {
+
+  public:
+    LED(Node *parent);
+//    void update();
 };
 
 

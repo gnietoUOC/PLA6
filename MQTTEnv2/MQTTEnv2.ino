@@ -15,46 +15,48 @@
 #define WPWD   "passw0rd"
 int status = WL_IDLE_STATUS;     
 
-long lastMsg = 0;
-char msg[50];
-int value = 0;
+//long lastMsg = 0;
+//char msg[50]; 
+//int value = 0;
+unsigned long next=0;
 
 WiFiClient wifiClient;
 PubSubClient *client;
+// Objeto que gestionar el temporizador. Utilizamos el temporizador 4
+// porque tiene una resolución de 32 bits. Sin esa resolución y con esa 
+// velocidad de reloj no podríamos medir más de 1sg. 
+//Adafruit_ZeroTimer timer = Adafruit_ZeroTimer(4);
 
-Device* mkrenv;
+//Device* mkrenv;
+Homie *homie;
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-//    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-  } else {
-//    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-  }
-
-}
+//void callback(char* topic, byte* payload, unsigned int length) {
+//  Serial.print("Message arrived [");
+//  Serial.print(topic);
+//  Serial.print("] ");
+//
+//  mkrenv->process(topic,(char *)payload);
+//
+//}
 
 void reconnect() {
-  // Loop until we're reconnected
+  // Reintentamos hasta conseguir conexión
   while (!client->connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client->connect(CLIENT,USERNAME,PWD)) {
+//    if (client->connect(CLIENT,USERNAME,PWD)) {
+//    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,WILLQOS,WILLRETAIN,WILLMESSAGE,WILLCLEAN)) {
+    
+    // He modificado la conexión para definir un mensaje 'Last Will'
+    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,true,WILLMESSAGE,true)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client->publish("outTopic", "hello world");
       // ... and resubscribe
-      client->subscribe("UbuntuTemp");
+      client->subscribe("#");
+//      client->setCallback(Device::callback);
+//        client->setCallback(std::function(&Device:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));   
+//        client->setCallback([this] (char* topic, byte* payload, unsigned int length) { mkrenv->callback(topic, payload, length); });
     } else {
       Serial.print("failed, rc=");
       Serial.print(client->state());
@@ -68,23 +70,47 @@ void reconnect() {
 void setup() {
 //  pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(9600);
+  while (!Serial);
+  
+  Serial.println("*** MKR1000 ***");
+  if (!ENV.begin()) {
+    Serial.println("Failed to initialize MKR ENV shield!");
+//    sensors = false;
+  }
   connectWiFi();
   dumpWiFi();
 
   client = new PubSubClient(wifiClient);
   
   client->setServer(SERVER, MQPORT);
-  client->setCallback(callback);
+//  client->setCallback(callback);
+//  client->setCallback(Device::callback);
 
   reconnect();
 
   defineDevice();
-  mkrenv->dump();
+  homie->dump();
   
 }
 
 void loop() {
+//  char data[16];
 
+  if (millis()>next) {
+    next += MQPERIOD;
+    homie->update();
+
+//    sprintf(data,"Memory: %d",freeMemory());
+//    Serial.println(data);
+    
+  }
+
+  if (!client->connected()) {
+    reconnect();
+  }
+
+  client->loop();
+ 
 /*  
 
   if (!client->connected()) {
@@ -148,11 +174,44 @@ void defineDevice() {
 
   Serial.println("-> defineDevice");
 
-  mkrenv = new Device(client,(char *)"MKR1000");
-  Node* node = new Node(mkrenv,(char *)"MKRENV");
-  Temperature* t = new Temperature(node);
-  Humidity* h = new Humidity(node);
-  Pressure* p = new Pressure(node);
+  homie = new Homie(client);
+  Serial.println(" -> Homie");
+  Device *d = new Device(homie,(char *)"MKR1000");
+  Serial.println(" -> Device");
+  Memory *m = new Memory(d);
+  Node *node = new Node(d,(char *)"MKRENV");
+  Serial.println(" -> Node");
+  Temperature *t = new Temperature(node);
+  Humidity *h = new Humidity(node);
+  Pressure *p = new Pressure(node);
 
   Serial.println("<- defineDevice");
+}
+
+/*
+void start() {
+  // Ajustamos el valor del contador.
+  uint32_t compare = MKPERIOD*MKCLOCK/1024;
+
+  timer.enable(false);
+  // Ajustamos el valor del prescaler a 1024. Perdemos resolución (no
+  // podremos subir de unos 48KHz). En realidad, al poder utilizar 
+  // un contador de 32 bits no nos hace falta un prescaler. Lo podríamos 
+  // dejas en 1 (ajustando eso sí el valor del contador)
+  timer.configure(TC_CLOCK_PRESCALER_DIV1024,   // prescaler
+          TC_COUNTER_SIZE_32BIT,                // 32bis
+          TC_WAVE_GENERATION_MATCH_PWM          // PWM mode (sea lo que sea)
+          );
+  timer.setCompare(0, compare);
+  // Indicamos la funcion que se debe llamar cuando se produzca la interrupción
+  timer.setCallback(true, TC_CALLBACK_CC_CHANNEL0, update);
+  timer.enable(true);
+
+  Serial.println("Started");
+}
+*/
+void update() {
+  Serial.println("-> update");
+  homie->update();
+  Serial.println("<- update");
 }
