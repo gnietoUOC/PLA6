@@ -23,22 +23,33 @@
 
 #include <cstdlib> 
 
+//#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
+#ifdef DEBUG    //Macros are usually in all capital letters.
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
+#else
+  #define DPRINT(...)     //now defines a blank line
+  #define DPRINTLN(...)   //now defines a blank line
+#endif
+
 #include <Arduino.h>
 #include <WiFi101.h>
 #include <PubSubClient.h>
 //#include "Adafruit_ZeroTimer.h"
 #include <Arduino_MKRENV.h>
 
+class Homie;
 class Device;
 class Node;
 class Property;
+class Attribute;
 
 class Base {
   public:
 //    Base (PubSubClient *client, char* name);
-    Base (PubSubClient *client);
-    Base (Base *parent, char* name);
-    Base (Base *parent, char* name, char *units, bool settable);
+//    Base (PubSubClient *client);
+    Base (PubSubClient *client, Base *parent, char* name);
+//    Base (PubSubClient *client, Base *parent, char* name, char *units, bool settable);
 
     char* getName();
     void setName(char *name);
@@ -48,11 +59,16 @@ class Base {
     void setParent(Base *parent);
     void setClient(PubSubClient *client);
     PubSubClient *getClient();
-    virtual void update() {};
-    virtual void dump() {};
+//    virtual void update();
+//    virtual void dump();
+    virtual void update(){};
+    virtual void dump(){};
 //    Base **getChildren();
 //    Base *getChildren(char *name);
 //    void addChildren(Base *);
+    Attribute *getAttributes();
+    Attribute *getAttribute(char *name);
+    void addAttribute(Attribute *a);
 
     void getPath(char *path);
     void process(char *topic,char *payload);
@@ -63,32 +79,17 @@ class Base {
  //   float* value;
     Base *parent;
     PubSubClient *client;
-
-};
-
-class Homie : public Base {
-
-  public:
-    Homie(PubSubClient *client);
-    Device **getDevices();
-    void addDevice(Device *d);
-    void update();
-    void dump();
-
-  private:
-    int n;
-    Device **devices;  
-    static void callback(char* topic, byte* payload, unsigned int length);
-  
+    Attribute **attributes;
 };
 
 class Node : public Base {
 
   public:
-    Node(Device *parent, char* name);
+    Node(PubSubClient *client, Device *parent, char* name);
 //    Node(PubSubClient *client, char* name);
-    Node(Homie *parent, char* name);
+//    Node(Homie *parent, char* name);
     Property** getProperties();
+    int getNumProperties();
     void addProperty(Property *p);
     
     void update();
@@ -105,9 +106,14 @@ class Device : public Node {
 
   public:
 //    Device(PubSubClient *client, char *name);
-    Device(Homie *parent, char *name);
-    Node** getNodes();
-    void addNode(Node *n);
+//    Device(char *name);
+//    Device(Homie *parent, char *name);
+    Device(PubSubClient *client, Device *parent, char *name);
+//    Node** getNodes();
+//    void addNode(Node *n);
+    Node** getChildren();
+    int getNumChildren();
+    void addChild(Node *n);
 
     void update();
     void dump();
@@ -115,14 +121,32 @@ class Device : public Node {
 
   private: 
     int n;
-    Node** nodes;
+//    Node** nodes;
+    Node** children;
+  
+};
+
+class Homie : public Device {
+
+  public:
+    Homie(PubSubClient *client);
+//    Device **getDevices();
+//    void addDevice(Device *d);
+    void update();
+//    void dump();
+    void reconnect();
+
+  private:
+//    int n;
+//    Device **devices;  
+    static void callback(char* topic, byte* payload, unsigned int length);
   
 };
 
 class Property : public Base {
 
   public:
-    Property(Node *parent, char *name, char *units, bool settable);
+    Property(PubSubClient *client, Node *parent, char *name, char *units, bool settable);
     float getValue();
     void setValue(float value);
     int getIValue();
@@ -133,6 +157,7 @@ class Property : public Base {
     void setSettable(bool settable);
     
     void dump();
+      void update();
 
   private:
     float value;
@@ -143,30 +168,38 @@ class Property : public Base {
 
 };
 
+class Attribute {
+
+  private:
+    char *name;
+    char *value;
+};
+
+
 class Temperature : public Property {
 
   public:
-    Temperature(Node *parent);
+    Temperature(PubSubClient *client, Node *parent);
     void update();
 };
 
 class Humidity : public Property {
   public:
-    Humidity(Node *parent);
+    Humidity(PubSubClient *client, Node *parent);
     void update();
 };
 
 class Pressure : public Property {
 
   public:
-    Pressure(Node *parent);
+    Pressure(PubSubClient *client, Node *parent);
     void update();
 };
 
 class Memory : public Property {
 
   public:
-    Memory(Device *parent);
+    Memory(PubSubClient *client, Node *parent);
     void update();
 };
 

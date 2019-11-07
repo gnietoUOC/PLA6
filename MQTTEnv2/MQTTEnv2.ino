@@ -39,33 +39,33 @@ Homie *homie;
 //
 //}
 
-void reconnect() {
-  // Reintentamos hasta conseguir conexión
-  while (!client->connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-//    if (client->connect(CLIENT,USERNAME,PWD)) {
-//    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,WILLQOS,WILLRETAIN,WILLMESSAGE,WILLCLEAN)) {
-    
-    // He modificado la conexión para definir un mensaje 'Last Will'
-    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,true,WILLMESSAGE,true)) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client->publish("outTopic", "hello world");
-      // ... and resubscribe
-      client->subscribe("#");
-//      client->setCallback(Device::callback);
-//        client->setCallback(std::function(&Device:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));   
-//        client->setCallback([this] (char* topic, byte* payload, unsigned int length) { mkrenv->callback(topic, payload, length); });
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client->state());
-      Serial.println(" try again  in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
+//void reconnect() {
+//  // Reintentamos hasta conseguir conexión
+//  while (!client->connected()) {
+//    Serial.print("Attempting MQTT connection...");
+//    // Attempt to connect
+////    if (client->connect(CLIENT,USERNAME,PWD)) {
+////    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,WILLQOS,WILLRETAIN,WILLMESSAGE,WILLCLEAN)) {
+//    
+//    // He modificado la conexión para definir un mensaje 'Last Will'
+//    if (client->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,true,WILLMESSAGE,true)) {
+//      Serial.println("connected");
+//      // Once connected, publish an announcement...
+//      client->publish("outTopic", "hello world");
+//      // ... and resubscribe
+//      client->subscribe("#");
+////      client->setCallback(Device::callback);
+////        client->setCallback(std::function(&Device:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));   
+////        client->setCallback([this] (char* topic, byte* payload, unsigned int length) { mkrenv->callback(topic, payload, length); });
+//    } else {
+//      Serial.print("failed, rc=");
+//      Serial.print(client->state());
+//      Serial.println(" try again  in 5 seconds");
+//      // Wait 5 seconds before retrying
+//      delay(5000);
+//    }
+//  }
+//}
 
 void setup() {
 //  pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
@@ -73,20 +73,13 @@ void setup() {
   while (!Serial);
   
   Serial.println("*** MKR1000 ***");
-  if (!ENV.begin()) {
-    Serial.println("Failed to initialize MKR ENV shield!");
-//    sensors = false;
-  }
+
   connectWiFi();
   dumpWiFi();
 
   client = new PubSubClient(wifiClient);
   
   client->setServer(SERVER, MQPORT);
-//  client->setCallback(callback);
-//  client->setCallback(Device::callback);
-
-  reconnect();
 
   defineDevice();
   homie->dump();
@@ -105,9 +98,10 @@ void loop() {
     
   }
 
-  if (!client->connected()) {
-    reconnect();
-  }
+//  if (!client->connected()) {
+//    reconnect();
+//  }
+  homie->reconnect();
 
   client->loop();
  
@@ -172,20 +166,26 @@ void connectWiFi() {
 
 void defineDevice() {
 
-  Serial.println("-> defineDevice");
+  DPRINTLN("-> defineDevice");
 
   homie = new Homie(client);
-  Serial.println(" -> Homie");
-  Device *d = new Device(homie,(char *)"MKR1000");
-  Serial.println(" -> Device");
-  Memory *m = new Memory(d);
-  Node *node = new Node(d,(char *)"MKRENV");
-  Serial.println(" -> Node");
-  Temperature *t = new Temperature(node);
-  Humidity *h = new Humidity(node);
-  Pressure *p = new Pressure(node);
+  Device *device = new Device(client,homie,(char *)"MKR1000");
 
-  Serial.println("<- defineDevice");
+  Node *node = new Node(client, device,(char *)"MKRCORE");
+  Memory *m = new Memory(client,node);
+
+  // Si no está conectado el MKRENV, no añado el módulo de sensores
+  // a la definición del dispositivo.
+  if (!ENV.begin()) {
+    Serial.println("Failed to initialize MKR ENV shield!");
+  } else {
+    node = new Node(client, device,(char *)"MKRENV");
+    Temperature *t = new Temperature(client, node);
+    Humidity *h = new Humidity(client, node);
+    Pressure *p = new Pressure(client, node);
+  }
+
+  DPRINTLN("<- defineDevice");
 }
 
 /*
@@ -210,8 +210,8 @@ void start() {
   Serial.println("Started");
 }
 */
-void update() {
-  Serial.println("-> update");
-  homie->update();
-  Serial.println("<- update");
-}
+//void update() {
+//  Serial.println("-> update");
+//  homie->update();
+//  Serial.println("<- update");
+//}
