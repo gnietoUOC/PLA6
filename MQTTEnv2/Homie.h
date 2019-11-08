@@ -4,7 +4,8 @@
 #define MAX_DEVICES     1
 #define MAX_NODES       2
 #define MAX_PROPERTIES  6
-#define NA              -99.99
+#define MAX_ATTRIBUTES  4
+#define NA              -1000
 #define SERVER          "192.168.0.173"
 #define MQPORT          1883           
 #define MQRETAIN        false
@@ -44,6 +45,21 @@ class Node;
 class Property;
 class Attribute;
 
+class Attribute {
+
+  public:
+    Attribute(char *name, char *cvalue);
+    Attribute(char *name, int ivalue);
+    char *getName();
+    char *getCValue();
+    int getIValue();
+
+  private:
+    char *name;
+    char *cvalue;
+    int ivalue;
+};
+
 class Base {
   public:
 //    Base (PubSubClient *client, char* name);
@@ -66,9 +82,10 @@ class Base {
 //    Base **getChildren();
 //    Base *getChildren(char *name);
 //    void addChildren(Base *);
-    Attribute *getAttributes();
+    Attribute **getAttributes();
+    int getNumAttributes();
     Attribute *getAttribute(char *name);
-    void addAttribute(Attribute *a);
+    void addAttribute(Attribute *attrib);
 
     void getPath(char *path);
     void process(char *topic,char *payload);
@@ -79,6 +96,7 @@ class Base {
  //   float* value;
     Base *parent;
     PubSubClient *client;
+    int n;
     Attribute **attributes;
 };
 
@@ -133,7 +151,7 @@ class Homie : public Device {
 //    Device **getDevices();
 //    void addDevice(Device *d);
     void update();
-//    void dump();
+    void dump();
     void reconnect();
 
   private:
@@ -146,35 +164,30 @@ class Homie : public Device {
 class Property : public Base {
 
   public:
-    Property(PubSubClient *client, Node *parent, char *name, char *units, bool settable);
+    Property(PubSubClient *client, Node *parent, char *name, char *units, char *type, bool settable);
     float getValue();
     void setValue(float value);
     int getIValue();
-    void setIValue(int value);
-    char* getUnits();
-    void setUnits(char *units);
-    bool getSettable();
-    void setSettable(bool settable);
+    void setIValue(int ivalue);
+    bool getBValue();
+    void setBValue(bool bvalue);
+//    char* getUnits();
+//    void setUnits(char *units);
+//    bool getSettable();
+//    void setSettable(bool settable);
     
     void dump();
-      void update();
+    void update();
 
   private:
     float value;
     int ivalue;
-    bool settable;
-    char* units;
-    char* type;  
+    int bvalue;
+//    bool settable;
+//    char* units;
+//    char* type;  
 
 };
-
-class Attribute {
-
-  private:
-    char *name;
-    char *value;
-};
-
 
 class Temperature : public Property {
 
@@ -206,8 +219,13 @@ class Memory : public Property {
 class LED : public Property {
 
   public:
-    LED(Node *parent);
-//    void update();
+    LED(PubSubClient *client, Node *parent,int port);
+    void update();
+    void set(bool status);
+
+   private:
+    int port;
+   
 };
 
 

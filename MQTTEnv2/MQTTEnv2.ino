@@ -18,7 +18,9 @@ int status = WL_IDLE_STATUS;
 //long lastMsg = 0;
 //char msg[50]; 
 //int value = 0;
-unsigned long next=0;
+unsigned long next;
+bool ledStatus = false;
+LED *l;
 
 WiFiClient wifiClient;
 PubSubClient *client;
@@ -78,12 +80,12 @@ void setup() {
   dumpWiFi();
 
   client = new PubSubClient(wifiClient);
-  
   client->setServer(SERVER, MQPORT);
 
   defineDevice();
   homie->dump();
-  
+  delay(5000);
+  next = millis();
 }
 
 void loop() {
@@ -92,6 +94,11 @@ void loop() {
   if (millis()>next) {
     next += MQPERIOD;
     homie->update();
+
+    ledStatus = !ledStatus;
+    l->set(ledStatus);
+//    l->setIValue(!l->getBValue());
+//    l->setIValue(1-l->getIValue());
 
 //    sprintf(data,"Memory: %d",freeMemory());
 //    Serial.println(data);
@@ -169,10 +176,24 @@ void defineDevice() {
   DPRINTLN("-> defineDevice");
 
   homie = new Homie(client);
+
+  Serial.print("a)Homie:");
+  Serial.println(homie->getNumChildren());
+  
+  
   Device *device = new Device(client,homie,(char *)"MKR1000");
 
+  Serial.println("Device");
+  Serial.print("b)Homie:");
+  Serial.println(homie->getNumChildren());
+
   Node *node = new Node(client, device,(char *)"MKRCORE");
+
+  Serial.println("Node");
+  
   Memory *m = new Memory(client,node);
+//  LED *l = new LED(client,node,6);
+  l = new LED(client,node,6);
 
   // Si no está conectado el MKRENV, no añado el módulo de sensores
   // a la definición del dispositivo.
