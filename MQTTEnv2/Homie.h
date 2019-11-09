@@ -22,7 +22,7 @@
 
 #define ENV_PROPS       3
 
-//#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
+#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
 #ifdef DEBUG    //Macros are usually in all capital letters.
   #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
@@ -69,7 +69,7 @@ class Base {
     void setName(char *name);
     Base *getParent();
     void setParent(Base *parent);
-    void setClient(PubSubClient *client);
+    virtual void setClient(PubSubClient *client);
     PubSubClient *getClient();
     virtual void update(){};
     virtual void dump(){};
@@ -116,6 +116,7 @@ class Device : public Node {
 
   public:
     Device(PubSubClient *client, Device *parent, char *name);
+    Device(Device *parent, char *name);
     Node** getChildren();
     int getNumChildren();
     void addChild(Node *n);
@@ -141,14 +142,15 @@ class Homie : public Device {
     void dump();
     void reconnect();
 //    static Homie *getInstance(PubSubClient *client);
-//    static Homie *getInstance();
-    Homie(PubSubClient *client);
+    static Homie *getInstance();
+//    Homie(PubSubClient *client);
+    void setClient(PubSubClient *client);
 
   private:
 //    static void callback(char* topic, byte* payload, unsigned int length);
     static void callback(char* topic, uint8_t* payload, unsigned int length);
 //    void callback(char* topic, uint8_t* payload, unsigned int length);
-//    Homie(PubSubClient *client);
+    Homie();
 //    Homie(PubSubClient *client);
 //    static Homie *homie;
 };

@@ -19,7 +19,9 @@ char* Base::getName() {
 void Base::setName(char *name) {
   this->name = name;
 
-  pub((char *)"$name",name);
+  if (getClient()!=NULL) {
+    pub((char *)"$name",name);
+  }
 }
 
 void Base::pub(char *tag,char *value) {
@@ -116,27 +118,33 @@ void Base::process(char *topic, char *payload) {
   
 }
 
-Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
-  DPRINTLN("-> Homie.Homie");
-  reconnect();
-  client->setCallback(&Homie::callback);  
-//  client->setCallback([this](char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback(std::bind(&Homie:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+//Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
+//  DPRINTLN("-> Homie.Homie");
+//  reconnect();
+//  client->setCallback(&Homie::callback);  
+////  client->setCallback([this](char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
+////  client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { this->callback(topic, payload, length); });
+////  client->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
+////  client->setCallback(std::bind(&Homie:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+//
+//  DPRINTLN("<- Homie.Homie");
+//}
 
-  DPRINTLN("<- Homie.Homie");
+Homie::Homie() : Device(NULL, NULL,(char *)"Homie") {
+  
 }
 
-//Homie::Homie() {
-//  
-//}
+void Homie::setClient(PubSubClient *client) {
+  Base:setClient(client);
+  reconnect();
+  client->setCallback(&Homie::callback);
+}
 
 //Homie *Homie::getInstance(PubSubClient *client) {
-//Homie *Homie::getInstance() {
-//  static Homie homie(client1);
-//  return &homie;
-//}
+Homie *Homie::getInstance() {
+  static Homie homie;
+  return &homie;
+}
 
 
 //void Homie::callback(char* topic, byte* payload, unsigned int length) {

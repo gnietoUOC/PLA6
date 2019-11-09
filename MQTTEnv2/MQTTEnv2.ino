@@ -30,7 +30,7 @@ PubSubClient *client;
 // velocidad de reloj no podríamos medir más de 1sg. 
 //Adafruit_ZeroTimer timer = Adafruit_ZeroTimer(4);
 
-Homie *homie;
+//Homie *homie;
 
 //void callback(char* topic, byte* payload, unsigned int length) {
 //  Serial.print("Message arrived [");
@@ -82,7 +82,8 @@ void setup() {
   client = new PubSubClient(wifiClient);
   client->setServer(SERVER, MQPORT);
 
-  defineDevice();
+//  defineDevice();
+  Homie *homie = defineDevice();
   homie->dump();
   delay(5000);
   next = millis();
@@ -90,6 +91,7 @@ void setup() {
 
 void loop() {
 //  char data[16];
+  Homie *homie = Homie::getInstance();
 
   if (millis()>next) {
     next += MQPERIOD;
@@ -106,6 +108,7 @@ void loop() {
 //  if (!client->connected()) {
 //    reconnect();
 //  }
+  
   homie->reconnect();
 
   client->loop();
@@ -169,12 +172,13 @@ void connectWiFi() {
   Serial.println("\nConnected.");
 }
 
-void defineDevice() {
+Homie *defineDevice() {
 
   DPRINTLN("-> defineDevice");
 
-  homie = new Homie(client);
-//  homie = Homie::getInstance();
+//  homie = new Homie(client);
+  Homie *homie = Homie::getInstance();
+  homie->setClient(client);
 //  homie = Homie::getInstance(client);
 
   Serial.print("a)Homie:");
@@ -225,6 +229,7 @@ void defineDevice() {
   homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
 
   DPRINTLN("<- defineDevice");
+  return (homie);
 }
 
 /*
