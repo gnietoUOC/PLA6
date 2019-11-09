@@ -143,10 +143,10 @@ class Homie : public Device {
 //    static Homie *getInstance(PubSubClient *client);
 //    static Homie *getInstance();
     Homie(PubSubClient *client);
+    void callback(char* topic, uint8_t* payload, unsigned int length);
 
   private:
 //    static void callback(char* topic, byte* payload, unsigned int length);
-    static void callback(char* topic, uint8_t* payload, unsigned int length);
 //    void callback(char* topic, uint8_t* payload, unsigned int length);
 //    Homie(PubSubClient *client);
 //    Homie(PubSubClient *client);

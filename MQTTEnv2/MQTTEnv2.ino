@@ -84,7 +84,12 @@ void setup() {
 
   defineDevice();
   homie->dump();
-  delay(5000);
+
+  client->setCallback(callback2);
+//  client->subscribe("Homie/+/+/+/Set);
+  client->subscribe("#");
+  
+//  delay(5000);
   next = millis();
 }
 
@@ -169,6 +174,12 @@ void connectWiFi() {
   Serial.println("\nConnected.");
 }
 
+void callback2(char* topic, uint8_t* payload, unsigned int length) {
+  Serial.println("-> Callback");
+  homie->callback(topic, payload, length);
+  Serial.println("<- Callback");
+}
+
 void defineDevice() {
 
   DPRINTLN("-> defineDevice");
@@ -207,22 +218,21 @@ void defineDevice() {
   }
 
 
-//  homie->process((char *)"Homie/MKR1000/MKRENV/Temperature/Set",(char *)"99");
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
-  delay(1500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
-  delay(500);
-  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+//  delay(1500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+//  delay(500);
+//  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
 
   DPRINTLN("<- defineDevice");
 }

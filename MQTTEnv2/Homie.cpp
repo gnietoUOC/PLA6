@@ -1,6 +1,8 @@
 #include "Homie.h"
 #include "freeMemory.h"
 
+//#include <functional>
+
 Base::Base(PubSubClient *client, Base *parent, char* name) {
 //  Serial.println("-> Base(P,char)");
   this->setParent(parent);
@@ -119,11 +121,20 @@ void Base::process(char *topic, char *payload) {
 Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
   DPRINTLN("-> Homie.Homie");
   reconnect();
-  client->setCallback(&Homie::callback);  
+//  client->setCallback(&Homie::callback);  
 //  client->setCallback([this](char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { this->callback(topic, payload, length); });
+//   client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { this->callback(topic, payload, length); });
+//  client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { Serial.println("*");  });
 //  client->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
 //  client->setCallback(std::bind(&Homie:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+//  using namespace std::placeholders;
+//  using std::placeholders::_1;
+//  using std::placeholders::_2;
+//  using std::placeholders::_3;
+//  client->setCallback(std::bind( &Homie::callback, this, _1,_2,_3));
+
+
 
   DPRINTLN("<- Homie.Homie");
 }
@@ -145,6 +156,7 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
   char token[16];
 
   DPRINTLN("-> Homie.callback");
+  Serial.println("-> Homie.callback");
 
   strncpy(data,(char *)payload,length);
   data[length]=0;
@@ -157,7 +169,7 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
 //  Serial.println();
   Serial.println(data);
 
-//  process(topic,data);
+  process(topic,data);
   
   DPRINTLN("-> Homie.callback");
 
@@ -191,15 +203,17 @@ void Homie::dump() {
 void Homie::reconnect() {
   char data[32];
   
+  DPRINTLN("-> Homie.reconnect");
   // Reintentamos hasta conseguir conexión
   while (!getClient()->connected()) {
     Serial.print("Attempting MQTT connection...");
     // He modificado la conexión para definir un mensaje 'Last Will'
-    if (getClient()->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,true,WILLMESSAGE,true)) {
+    if (getClient()->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,false,WILLMESSAGE,true)) {
       Serial.println("Connected");
+//      getClient()->setCallback(callback2);
 //      getClient()->subscribe("#");
       // Sólo me subscribo al 'set' de las propiedades
-      sprintf(data,"Homie/%s/+/+/set",getName());
+      sprintf(data,"Homie/%s/+/+/Set",getName());
       getClient()->subscribe(data);
 //      getClient()->setCallback(&Homie::callback);
     } else {
@@ -209,6 +223,7 @@ void Homie::reconnect() {
       delay(5000);
     }
   }
+  DPRINTLN("<- Homie.reconnect");
 }
 
 Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, parent, name) {
@@ -319,8 +334,6 @@ void Device::init() {
 void Device::update() {
 
   DPRINTLN("-> Device.update");
-  DPRINTLN("-> Device.update");
-  Serial.println(getNumChildren());
   
   Node** nn = getChildren();
   for (int i=0;i<getNumChildren();i++) {
@@ -338,7 +351,6 @@ void Device::update() {
 //    }
 //  }
 //    
-  DPRINTLN("<- Device.update");
   DPRINTLN("<- Device.update");
 }
 
@@ -415,8 +427,6 @@ Property *Node::getProperty(char *name) {
 void Node::update() {
   
   DPRINTLN("-> Node.update");
-  Serial.println("-> Node.update");
-  Serial.println(getNumProperties());
 
   Property **pp = getProperties();
   DPRINTLN(getNumProperties());
