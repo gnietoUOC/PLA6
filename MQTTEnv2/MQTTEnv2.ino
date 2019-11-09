@@ -178,9 +178,15 @@ Homie *defineDevice() {
 
 //  homie = new Homie(client);
   Homie *homie = Homie::getInstance();
+  Serial.print("Instance");
+  if (homie==0 || homie==NULL) {
+    Serial.println("Cuidadooo");
+  } else {
+    Serial.println("Seguimos");
+  }
   homie->setClient(client);
 //  homie = Homie::getInstance(client);
-
+  Serial.print("Instance2");
   Serial.print("a)Homie:");
   Serial.println(homie->getNumChildren());
   

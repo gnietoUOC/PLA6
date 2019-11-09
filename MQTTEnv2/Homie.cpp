@@ -93,7 +93,9 @@ Attribute *Base::getAttribute(char *name) {
 
 
 void Base::setClient(PubSubClient *client) {
+  Serial.println("-> Base.setClient");
   this->client = client;
+  Serial.println("<- Base.setClient");
 }
 
 PubSubClient *Base::getClient() {
@@ -140,10 +142,15 @@ void Homie::setClient(PubSubClient *client) {
   client->setCallback(&Homie::callback);
 }
 
+Homie* Homie::homie= 0;
 //Homie *Homie::getInstance(PubSubClient *client) {
 Homie *Homie::getInstance() {
-  static Homie homie;
-  return &homie;
+  //static Homie homie;
+  if (homie == 0) {
+    homie = new Homie();
+  }
+  Serial.println("<-> Homie.getInstance");
+  return homie;
 }
 
 
@@ -327,7 +334,6 @@ void Device::init() {
 void Device::update() {
 
   DPRINTLN("-> Device.update");
-  DPRINTLN("-> Device.update");
   Serial.println(getNumChildren());
   
   Node** nn = getChildren();
@@ -346,7 +352,6 @@ void Device::update() {
 //    }
 //  }
 //    
-  DPRINTLN("<- Device.update");
   DPRINTLN("<- Device.update");
 }
 

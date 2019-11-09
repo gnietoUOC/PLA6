@@ -152,7 +152,7 @@ class Homie : public Device {
 //    void callback(char* topic, uint8_t* payload, unsigned int length);
     Homie();
 //    Homie(PubSubClient *client);
-//    static Homie *homie;
+    static Homie *homie;
 };
 
 //Homie *Homie::homie = 0;
