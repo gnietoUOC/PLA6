@@ -22,8 +22,6 @@
 
 #define ENV_PROPS       3
 
-#include <cstdlib> 
-
 //#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
 #ifdef DEBUG    //Macros are usually in all capital letters.
   #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
@@ -69,19 +67,12 @@ class Base {
 
     char* getName();
     void setName(char *name);
-//    float *getValue();
-//    void setValue(float value);
     Base *getParent();
     void setParent(Base *parent);
     void setClient(PubSubClient *client);
     PubSubClient *getClient();
-//    virtual void update();
-//    virtual void dump();
     virtual void update(){};
     virtual void dump(){};
-//    Base **getChildren();
-//    Base *getChildren(char *name);
-//    void addChildren(Base *);
     Attribute **getAttributes();
     int getNumAttributes();
     Attribute *getAttribute(char *name);
@@ -104,11 +95,12 @@ class Node : public Base {
 
   public:
     Node(PubSubClient *client, Device *parent, char* name);
-//    Node(PubSubClient *client, char* name);
-//    Node(Homie *parent, char* name);
     Property** getProperties();
     int getNumProperties();
     void addProperty(Property *p);
+    Property *getProperty(int i);
+    Property *getProperty(char *name);
+    void process(char *topic, char* value);
     
     void update();
     void dump();
@@ -123,15 +115,13 @@ class Node : public Base {
 class Device : public Node {
 
   public:
-//    Device(PubSubClient *client, char *name);
-//    Device(char *name);
-//    Device(Homie *parent, char *name);
     Device(PubSubClient *client, Device *parent, char *name);
-//    Node** getNodes();
-//    void addNode(Node *n);
     Node** getChildren();
     int getNumChildren();
     void addChild(Node *n);
+    Node *getChild(int i);
+    Node *getChild(char *name);
+    void process(char *topic, char* value);
 
     void update();
     void dump();
@@ -147,19 +137,23 @@ class Device : public Node {
 class Homie : public Device {
 
   public:
-    Homie(PubSubClient *client);
-//    Device **getDevices();
-//    void addDevice(Device *d);
     void update();
     void dump();
     void reconnect();
+//    static Homie *getInstance(PubSubClient *client);
+//    static Homie *getInstance();
+    Homie(PubSubClient *client);
 
   private:
-//    int n;
-//    Device **devices;  
-    static void callback(char* topic, byte* payload, unsigned int length);
-  
+//    static void callback(char* topic, byte* payload, unsigned int length);
+    static void callback(char* topic, uint8_t* payload, unsigned int length);
+//    void callback(char* topic, uint8_t* payload, unsigned int length);
+//    Homie(PubSubClient *client);
+//    Homie(PubSubClient *client);
+//    static Homie *homie;
 };
+
+//Homie *Homie::homie = 0;
 
 class Property : public Base {
 
@@ -171,10 +165,6 @@ class Property : public Base {
     void setIValue(int ivalue);
     bool getBValue();
     void setBValue(bool bvalue);
-//    char* getUnits();
-//    void setUnits(char *units);
-//    bool getSettable();
-//    void setSettable(bool settable);
     
     void dump();
     void update();
@@ -183,9 +173,6 @@ class Property : public Base {
     float value;
     int ivalue;
     int bvalue;
-//    bool settable;
-//    char* units;
-//    char* type;  
 
 };
 
@@ -228,6 +215,18 @@ class LED : public Property {
    
 };
 
+/*
+class HPubSubClient : public PubSubClient {
 
+  public: 
+    HPubSubClient(Client& client);
+    void setHomie(Homie *homie);
+    void callback(char* topic, uint8_t* payload, unsigned int length);
+    Homie *getHomie();
 
+  private:
+    Homie *homie;
+  
+};
+*/
 #endif

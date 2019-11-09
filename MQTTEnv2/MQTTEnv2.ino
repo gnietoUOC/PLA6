@@ -24,12 +24,12 @@ LED *l;
 
 WiFiClient wifiClient;
 PubSubClient *client;
+
 // Objeto que gestionar el temporizador. Utilizamos el temporizador 4
 // porque tiene una resolución de 32 bits. Sin esa resolución y con esa 
 // velocidad de reloj no podríamos medir más de 1sg. 
 //Adafruit_ZeroTimer timer = Adafruit_ZeroTimer(4);
 
-//Device* mkrenv;
 Homie *homie;
 
 //void callback(char* topic, byte* payload, unsigned int length) {
@@ -97,8 +97,6 @@ void loop() {
 
     ledStatus = !ledStatus;
     l->set(ledStatus);
-//    l->setIValue(!l->getBValue());
-//    l->setIValue(1-l->getIValue());
 
 //    sprintf(data,"Memory: %d",freeMemory());
 //    Serial.println(data);
@@ -176,6 +174,8 @@ void defineDevice() {
   DPRINTLN("-> defineDevice");
 
   homie = new Homie(client);
+//  homie = Homie::getInstance();
+//  homie = Homie::getInstance(client);
 
   Serial.print("a)Homie:");
   Serial.println(homie->getNumChildren());
