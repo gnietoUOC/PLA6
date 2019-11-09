@@ -100,7 +100,7 @@ class Node : public Base {
     void addProperty(Property *p);
     Property *getProperty(int i);
     Property *getProperty(char *name);
-    void process(char *topic, char* value);
+    virtual void process(char *topic, char* value);
     
     void update();
     void dump();
@@ -165,6 +165,7 @@ class Property : public Base {
     void setIValue(int ivalue);
     bool getBValue();
     void setBValue(bool bvalue);
+    virtual void set(char *value);
     
     void dump();
     void update();
@@ -209,6 +210,7 @@ class LED : public Property {
     LED(PubSubClient *client, Node *parent,int port);
     void update();
     void set(bool status);
+    void set(char *value);
 
    private:
     int port;

@@ -118,7 +118,6 @@ void Base::process(char *topic, char *payload) {
 
 Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
   DPRINTLN("-> Homie.Homie");
-  Serial.println("-> Homie.Homie");
   reconnect();
   client->setCallback(&Homie::callback);  
 //  client->setCallback([this](char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
@@ -126,7 +125,6 @@ Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
 //  client->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
 //  client->setCallback(std::bind(&Homie:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-//  Serial.println("<- Homie.Homie");
   DPRINTLN("<- Homie.Homie");
 }
 
@@ -232,12 +230,12 @@ int Device::getNumChildren() {
 }
 
 void Device::addChild(Node *node) {
-  Serial.println("-> Device.addChild");
+  DPRINTLN("-> Device.addChild");
 
   node->setParent(this);
   children[n++] = node;
 
-  Serial.println("<- Device.addChild");
+  DPRINTLN("<- Device.addChild");
 }
 
 Node *Device::getChild(int i) {
@@ -246,6 +244,7 @@ Node *Device::getChild(int i) {
 
 Node *Device::getChild(char *name) {
   Node *node = NULL;
+
   DPRINTLN("-> Device.getChild");
   for (int i=0; i<getNumChildren() && node==NULL; i++) {
     char *namei = getChild(i)->getName();
@@ -260,27 +259,26 @@ Node *Device::getChild(char *name) {
 void Device::process(char *topic, char* value) {
   char name[16];
   Node *node;
-  Property *prop;
   
   DPRINTLN("-> Device.process");
   Serial.println(topic);
+  if (!strncmp(topic,"Homie/",6)) {
+    topic += 6;
+  }
   char *token = strchr(topic,'/');
   Serial.println(token);
   if (token!=NULL) {
     int n = token-topic;
     strncpy(name,topic,n);
     name[n]=0;
+    Serial.println(name);
     node = getChild(name);
     if (node!=NULL) {
       Serial.println("Found!");
+//      ((Device *)node)->process(token+1,value);
       node->process(token+1,value);
     } else {
-      Serial.print("Property:");
-      prop = getProperty(name);
-      if (prop!=NULL) {
-        Serial.println(name);
-        prop->process(token+1,value);
-      }
+      Serial.println("Not found");
     }
     
 //  } else {
@@ -319,8 +317,9 @@ void Device::init() {
 */
 
 void Device::update() {
+
   DPRINTLN("-> Device.update");
-  Serial.println("-> Device.update");
+  DPRINTLN("-> Device.update");
   Serial.println(getNumChildren());
   
   Node** nn = getChildren();
@@ -339,15 +338,13 @@ void Device::update() {
 //    }
 //  }
 //    
-  Serial.println("<- Device.update");
+  DPRINTLN("<- Device.update");
   DPRINTLN("<- Device.update");
 }
 
 void Device::dump() {
 
   DPRINTLN("-> Device.dump");
-
-//  Node** nn = getNodes();
   Node** nn = getChildren();
   for (int i=0;i<getNumChildren();i++) {
     Node* n = nn[i];
@@ -416,6 +413,7 @@ Property *Node::getProperty(char *name) {
 }
 
 void Node::update() {
+  
   DPRINTLN("-> Node.update");
   Serial.println("-> Node.update");
   Serial.println(getNumProperties());
@@ -429,9 +427,34 @@ void Node::update() {
     }
   }
 
-  Serial.println("<- Node.update");
   DPRINTLN("<- Node.update");
+}
+
+void Node::process(char *topic, char *value) {
+  char name[16];
+  Property *prop;
+
+  DPRINTLN("-> Node.process");
+  Serial.print(topic);
+  Serial.print(":");
+  Serial.println(value);
+
+  char *token = strchr(topic,'/');
+  Serial.println(token);
+  if (token!=NULL) {
+    int n = token-topic;
+    strncpy(name,topic,n);
+    name[n]=0;
+    Serial.println(name);
+    prop = getProperty(name);
+    if (prop!=NULL) {
+      Serial.println(name);
+      prop->set(value);
+    }
+  }
+
   
+  DPRINTLN("<- Node.process");
 }
 
 void Node::dump() {
@@ -439,6 +462,7 @@ void Node::dump() {
   char data[96];
   char path[96];
 
+  DPRINTLN("-> Node.dump");
   getPath(path);
   
   sprintf(data,"%s [%s]",getName(),path);
@@ -465,6 +489,10 @@ Property::Property(PubSubClient *client, Node *parent, char *name, char *units, 
   }
   addAttribute(new Attribute((char *)"settable",(char *)(settable? "True":"False")));
   
+}
+
+void Property::set(char *value) {
+  Serial.println("Not implemented");
 }
 
 //char *Property::getValue() {
@@ -535,7 +563,7 @@ void Property::setBValue(bool bvalue) {
 
 void Property::update() {
   DPRINTLN("-> Property.update");  
-  Serial.println("<-> Property.update");
+  DPRINTLN("<-> Property.update");
   DPRINTLN("<- Property.update");  
 }
 
@@ -614,6 +642,18 @@ LED::LED(PubSubClient *client, Node *parent, int port) : Property(client, parent
 void LED::set(bool status) {
   setBValue(status);
   digitalWrite(port,status);
+}
+
+void LED::set(char *value) {
+  Serial.println("-> LED.set");
+  if (!strcmp(value,"ON")) {
+    set(true);
+  } else {
+    if (!strcmp(value,"OFF")) {
+      set(false);
+    }
+  }
+  Serial.println("<- LED.set");
 }
 
 void LED::update() {

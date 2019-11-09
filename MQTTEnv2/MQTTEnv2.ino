@@ -96,7 +96,7 @@ void loop() {
     homie->update();
 
     ledStatus = !ledStatus;
-    l->set(ledStatus);
+//    l->set(ledStatus);
 
 //    sprintf(data,"Memory: %d",freeMemory());
 //    Serial.println(data);
@@ -205,6 +205,24 @@ void defineDevice() {
     Humidity *h = new Humidity(client, node);
     Pressure *p = new Pressure(client, node);
   }
+
+
+//  homie->process((char *)"Homie/MKR1000/MKRENV/Temperature/Set",(char *)"99");
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+  delay(1500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"ON");
+  delay(500);
+  homie->process((char *)"Homie/MKR1000/MKRCORE/LED/Set",(char *)"OFF");
 
   DPRINTLN("<- defineDevice");
 }
