@@ -79,15 +79,15 @@ void setup() {
   connectWiFi();
   dumpWiFi();
 
-  client = new PubSubClient(wifiClient);
-  client->setServer(SERVER, MQPORT);
+//  client = new PubSubClient(wifiClient);
+//  client->setServer(SERVER, MQPORT);
 
   defineDevice();
   homie->dump();
 
-  client->setCallback(callback2);
-//  client->subscribe("Homie/+/+/+/Set);
-  client->subscribe("#");
+//  client->setCallback(callback2); 
+////  client->subscribe("Homie/+/+/+/Set);
+//  client->subscribe("#");
   
 //  delay(5000);
   next = millis();
@@ -113,7 +113,8 @@ void loop() {
 //  }
   homie->reconnect();
 
-  client->loop();
+//  client->loop();
+  homie->loop();
  
 /*  
 
@@ -184,7 +185,8 @@ void defineDevice() {
 
   DPRINTLN("-> defineDevice");
 
-  homie = new Homie(client);
+//  homie = new Homie(client);
+  homie = new Homie(wifiClient);
 //  homie = Homie::getInstance();
 //  homie = Homie::getInstance(client);
 

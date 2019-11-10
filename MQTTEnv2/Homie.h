@@ -15,17 +15,19 @@
 #define WILLMESSAGE     "ATPC"
 
 #define CLIENT          "mkr1000"
-
-//#define MKCLOCK           48000000
-//#define MKPERIOD          1 // 1sg
+  
+//#define MKCLOCK         48000000
+//#define MKPERIOD        1 // 1sg
 #define MQPERIOD          1000 // 1sg
 
 #define ENV_PROPS       3
 
-//#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
-#ifdef DEBUG    //Macros are usually in all capital letters.
-  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
-  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
+// Defino unas macros para facilitarme el habilitar las trazas
+// No las he escrito yo. Pero no recuerdo de donde las copié.
+#define DEBUG   
+#ifdef DEBUG    
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)     
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   
 #else
   #define DPRINT(...)     //now defines a blank line
   #define DPRINTLN(...)   //now defines a blank line
@@ -134,15 +136,14 @@ class Device : public Node {
   
 };
 
-class Homie : public Device {
+class Homie : public Device , public PubSubClient {
 
   public:
     void update();
     void dump();
     void reconnect();
-//    static Homie *getInstance(PubSubClient *client);
-//    static Homie *getInstance();
-    Homie(PubSubClient *client);
+//    Homie(PubSubClient *client);
+    Homie(Client& client);
     void callback(char* topic, uint8_t* payload, unsigned int length);
 
   private:
