@@ -29,6 +29,9 @@ void Base::pub(char *tag,char *value) {
   char path[96];
 
   DPRINTLN("-> Base.pub");
+  if (getClient()==NULL) {
+    Serial.println("Undefined");
+  }
   if (getClient()->connected()) {
     Serial.println("Connected");
     getPath(path);
@@ -120,7 +123,7 @@ void Base::process(char *topic, char *payload) {
 }
 
 //Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
-Homie::Homie(Client& client) : Device(this, NULL,(char *)"Homie") , PubSubClient(client) {
+Homie::Homie(Client& client) : PubSubClient(client) , Device(this, NULL,(char *)"Homie") {
   DPRINTLN("-> Homie.Homie");
 
   setServer(SERVER, MQPORT);
@@ -128,10 +131,10 @@ Homie::Homie(Client& client) : Device(this, NULL,(char *)"Homie") , PubSubClient
 //  client->subscribe("Homie/+/+/+/Set);
   subscribe("#");
 
-  auto x = [this](char* topic, byte* payload, unsigned int length) { 
-      this->callback(topic, payload, length);
-  };
-  setCallback(x); 
+//  auto x = [this](char* topic, byte* payload, unsigned int length) { 
+//      this->callback(topic, payload, length);
+//  };
+//  setCallback(x); 
 
   reconnect();
 //  client->setCallback(&Homie::callback);  
