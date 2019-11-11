@@ -37,9 +37,11 @@ void Base::pub(char *tag,char *value) {
       sprintf(data,"%s/%s",path,tag);
       client->publish(data,value,MQRETAIN);
       DPRINTLN(data);
+      Serial.println(data);
     } else {
       client->publish(path,value,MQRETAIN);
       DPRINTLN(path);
+      Serial.println(path);
     } 
   }   
   DPRINTLN("<- Base.pub");
@@ -156,7 +158,6 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
   char token[16];
 
   DPRINTLN("-> Homie.callback");
-  Serial.println("-> Homie.callback");
 
   strncpy(data,(char *)payload,length);
   data[length]=0;
@@ -167,7 +168,7 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
 //    Serial.print((char)payload[i]);
 //  }
 //  Serial.println();
-  Serial.println(data);
+//  Serial.println(data);
 
   process(topic,data);
   
@@ -203,7 +204,7 @@ void Homie::dump() {
 void Homie::reconnect() {
   char data[32];
   
-  DPRINTLN("-> Homie.reconnect");
+//  DPRINTLN("-> Homie.reconnect");
   // Reintentamos hasta conseguir conexión
   while (!getClient()->connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -223,15 +224,15 @@ void Homie::reconnect() {
       delay(5000);
     }
   }
-  DPRINTLN("<- Homie.reconnect");
+//  DPRINTLN("<- Homie.reconnect");
 }
 
 Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, parent, name) {
-  Serial.println("-> Device.Device ");  
+  DPRINTLN("-> Device.Device ");  
   n=0;
   children = (Node**)calloc(MAX_NODES,sizeof(Node*));
 
-  Serial.println("<- Device.Device ");  
+  DPRINTLN("<- Device.Device ");  
 };
 
 Node** Device::getChildren() {
@@ -276,20 +277,20 @@ void Device::process(char *topic, char* value) {
   Node *node;
   
   DPRINTLN("-> Device.process");
-  Serial.println(topic);
+//  Serial.println(topic);
   if (!strncmp(topic,"Homie/",6)) {
     topic += 6;
   }
   char *token = strchr(topic,'/');
-  Serial.println(token);
+//  Serial.println(token);
   if (token!=NULL) {
     int n = token-topic;
     strncpy(name,topic,n);
     name[n]=0;
-    Serial.println(name);
+//    Serial.println(name);
     node = getChild(name);
     if (node!=NULL) {
-      Serial.println("Found!");
+//      Serial.println("Found!");
 //      ((Device *)node)->process(token+1,value);
       node->process(token+1,value);
     } else {
@@ -445,25 +446,24 @@ void Node::process(char *topic, char *value) {
   Property *prop;
 
   DPRINTLN("-> Node.process");
-  Serial.print(topic);
-  Serial.print(":");
-  Serial.println(value);
+//  Serial.print(topic);
+//  Serial.print(":");
+//  Serial.println(value);
 
   char *token = strchr(topic,'/');
-  Serial.println(token);
+//  Serial.println(token);
   if (token!=NULL) {
     int n = token-topic;
     strncpy(name,topic,n);
     name[n]=0;
-    Serial.println(name);
+//    Serial.println(name);
     prop = getProperty(name);
     if (prop!=NULL) {
-      Serial.println(name);
+//      Serial.println(name);
       prop->set(value);
     }
   }
 
-  
   DPRINTLN("<- Node.process");
 }
 
@@ -518,15 +518,15 @@ void Property::setValue(float value) {
 
   DPRINTLN("-> Property.setValue");
 
-  if (abs(this->value-value)>=1) {
+//  if (abs(this->value-value)>=1) {
     sprintf(data,"%.2f <-> %.2f (%.4f)",this->value,value,this->value-value);            
     Serial.println(data);    
     sprintf(data,"%.2f",value);            
     pub(NULL,data);
     this->value = value;
-  } else {
-    DPRINTLN("*");
-  }
+//  } else {
+//    DPRINTLN("*");
+//  }
   DPRINTLN("<- Property.setValue");
 }
 
@@ -563,7 +563,6 @@ void Property::setBValue(bool bvalue) {
     Serial.println(data);    
     sprintf(data,"%d",bvalue);            
     pub(NULL,data);
-    Serial.println("pub>SetBvalue");
     this->bvalue = bvalue;
   } else {
     DPRINTLN("@");
@@ -609,7 +608,10 @@ Temperature::Temperature(PubSubClient *client, Node *parent) : Property(client, 
 void Temperature::update() {
 
   DPRINTLN("-> Temperature.update");
-  setValue(ENV.readTemperature());
+  float value = ENV.readTemperature();
+  Serial.print("Temperature: ");
+  Serial.println(value);
+  setValue(value);
   DPRINTLN("<- Temperature.update");
 }
 
@@ -619,7 +621,10 @@ Humidity::Humidity(PubSubClient *client, Node *parent) : Property(client, parent
 void Humidity::update() {
 
   DPRINTLN("-> Humidity.update");
-  setValue(ENV.readHumidity());
+  float value = ENV.readHumidity();
+  Serial.print("Humidity: ");
+  Serial.println(value);
+  setValue(value);
   DPRINTLN("<- Humidity.update");
 }
 
@@ -629,7 +634,10 @@ Pressure::Pressure(PubSubClient *client, Node *parent) : Property(client,parent,
 void Pressure::update() {
 
   DPRINTLN("-> Pressure.update");
-  setValue(ENV.readPressure());
+  float value = ENV.readPressure();
+  Serial.print("Pressure: ");
+  Serial.println(value);
+  setValue(value);
   DPRINTLN("<- Pressure.update");
 }
 
@@ -639,7 +647,10 @@ Memory::Memory(PubSubClient *client, Node *parent) : Property(client, parent,(ch
 void Memory::update() {
 
   DPRINTLN("-> Memory.update");
-//  setIValue(freeMemory()); 
+  int value = freeMemory();
+  Serial.print("Memory: ");
+  Serial.println(value);
+  setValue(value);
   DPRINTLN("<- Memory.update");
 }
 
@@ -655,7 +666,7 @@ void LED::set(bool status) {
 }
 
 void LED::set(char *value) {
-  Serial.println("-> LED.set");
+  DPRINTLN("-> LED.set");
   if (!strcmp(value,"ON")) {
     set(true);
   } else {
@@ -663,7 +674,7 @@ void LED::set(char *value) {
       set(false);
     }
   }
-  Serial.println("<- LED.set");
+  DPRINTLN("<- LED.set");
 }
 
 void LED::update() {
