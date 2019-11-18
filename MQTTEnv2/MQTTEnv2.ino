@@ -35,7 +35,7 @@ void setup() {
   homie->dump();
 
   client->setCallback(callback);
-//  client->subscribe("Homie/+/+/+/Set");
+  client->subscribe("Homie/+/+/+/Set");
   
   next = millis();
 }
@@ -64,14 +64,17 @@ void dumpWiFi() {
   Serial.print("IP address:  ");
   Serial.println(ip);
 
+  // Máscara de red
   Serial.print("Subnet mask: ");
   Serial.println((IPAddress)WiFi.subnetMask());
 
+  // Dirección del gateway
   Serial.print("Gateway IP:  ");
   Serial.println((IPAddress)WiFi.gatewayIP());
 
 }
 
+// Conexión al AP mediante WiFi
 void connectWiFi() {
   
   // Verificamos que la Ethernet está disponible.
@@ -92,12 +95,17 @@ void connectWiFi() {
   Serial.println("\nConnected.");
 }
 
+// Función que es invocada cuando el broker MQTT nos envía un mensaje
+// al que previamente nos habíamos suscrito.
+// TODO: Registrar directamente un método de la instancia de Homie.
 void callback(char* topic, uint8_t* payload, unsigned int length) {
   DPRINTLN("-> Callback");
   homie->callback(topic, payload, length);
   DPRINTLN("<- Callback");
 }
 
+// Método que define nuestro dispositivo para que podamos gestionar
+// su estado utilizando la convención Homie
 void defineDevice() {
 
   DPRINTLN("-> defineDevice");
@@ -120,6 +128,10 @@ void defineDevice() {
     Temperature *t = new Temperature(client, node);
     Humidity *h = new Humidity(client, node);
     Pressure *p = new Pressure(client, node);
+    Illuminance *i = new Illuminance(client, node);
+    UVA *ua = new UVA(client, node);
+    UVB *ub = new UVB(client, node);
+    UVIndex *u = new UVIndex(client, node);
   }
 
   DPRINTLN("<- defineDevice");

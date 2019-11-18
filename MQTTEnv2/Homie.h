@@ -9,8 +9,8 @@
 #define SERVER          "192.168.0.173"
 #define MQPORT          1883           
 #define MQRETAIN        false
-#define MQUSERNAME        "genaro"
-#define MQPWD             "passw0rd"
+#define MQUSERNAME      "genaro"
+#define MQPWD           "passw0rd"
 #define WILLTOPIC       "MKR1000"
 #define WILLMESSAGE     "ATPC"
 
@@ -24,17 +24,16 @@
 
 //#define DEBUG   // Esta línea me permite activar o desactivar las trazas del código
 #ifdef DEBUG      
-  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT es un Serial.print
-  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN es un Serial.prinln
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)    //DPRINT es un Serial.print
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)  //DPRINTLN es un Serial.prinln
 #else
-  #define DPRINT(...)     //DPRINT es una línea en blanco
-  #define DPRINTLN(...)   //DRINTLN es una línea en blanco
+  #define DPRINT(...)                                 //DPRINT es una línea en blanco
+  #define DPRINTLN(...)                               //DRINTLN es una línea en blanco
 #endif
 
 #include <Arduino.h>
 #include <WiFi101.h>
 #include <PubSubClient.h>
-//#include "Adafruit_ZeroTimer.h"
 #include <Arduino_MKRENV.h>
 
 class Homie;
@@ -60,10 +59,7 @@ class Attribute {
 
 class Base {
   public:
-//    Base (PubSubClient *client, char* name);
-//    Base (PubSubClient *client);
     Base (PubSubClient *client, Base *parent, char* name);
-//    Base (PubSubClient *client, Base *parent, char* name, char *units, bool settable);
 
     char* getName();
     void setName(char *name);
@@ -84,7 +80,6 @@ class Base {
 
   private:
     char* name;
- //   float* value;
     Base *parent;
     PubSubClient *client;
     int n;
@@ -129,7 +124,6 @@ class Device : public Node {
 
   private: 
     int n;
-//    Node** nodes;
     Node** children;
   
 };
@@ -140,20 +134,10 @@ class Homie : public Device {
     void update();
     void dump();
     void reconnect();
-//    static Homie *getInstance(PubSubClient *client);
-//    static Homie *getInstance();
     Homie(PubSubClient *client);
     void callback(char* topic, uint8_t* payload, unsigned int length);
 
-  private:
-//    static void callback(char* topic, byte* payload, unsigned int length);
-//    void callback(char* topic, uint8_t* payload, unsigned int length);
-//    Homie(PubSubClient *client);
-//    Homie(PubSubClient *client);
-//    static Homie *homie;
 };
-
-//Homie *Homie::homie = 0;
 
 class Property : public Base {
 
@@ -197,6 +181,34 @@ class Pressure : public Property {
     void update();
 };
 
+class Illuminance : public Property {
+
+  public:
+    Illuminance(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVA : public Property {
+
+  public:
+    UVA(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVB : public Property {
+
+  public:
+    UVB(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVIndex : public Property {
+
+  public:
+    UVIndex(PubSubClient *client, Node *parent);
+    void update();
+};
+
 class Memory : public Property {
 
   public:
@@ -217,18 +229,4 @@ class LED : public Property {
    
 };
 
-/*
-class HPubSubClient : public PubSubClient {
-
-  public: 
-    HPubSubClient(Client& client);
-    void setHomie(Homie *homie);
-    void callback(char* topic, uint8_t* payload, unsigned int length);
-    Homie *getHomie();
-
-  private:
-    Homie *homie;
-  
-};
-*/
 #endif

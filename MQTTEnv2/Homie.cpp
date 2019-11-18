@@ -119,7 +119,6 @@ void Base::getPath(char *path) {
 }
 
 void Base::process(char *topic, char *payload) {
-  
 }
 
 Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
@@ -130,6 +129,8 @@ Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
   DPRINTLN("<- Homie.Homie");
 }
 
+// Gestiona la recepción de los mensajes que llegan a uno de los 
+// topics relacionados con este dispositivo
 void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
   char data[64];
   char token[16];
@@ -146,6 +147,7 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
   DPRINTLN("-> Homie.callback");
 }
 
+// Actualiza cada uno de los dispositivos definidos.
 void Homie::update() {
 
   DPRINTLN("-> Homie.update");
@@ -161,6 +163,7 @@ void Homie::update() {
   DPRINTLN("<- Homie.update");
 }
 
+// Vuelca cada uno de los dispositivos definidos.
 void Homie::dump() {
   
   Device** dd = (Device **)getChildren();
@@ -172,6 +175,7 @@ void Homie::dump() {
   }
 }
 
+// Gestiona la reconexión al MQTT
 void Homie::reconnect() {
   char data[32];
   
@@ -183,10 +187,6 @@ void Homie::reconnect() {
     // He modificado la conexión para definir un mensaje 'Last Will'
     if (getClient()->connect(MQCLIENT,MQUSERNAME,MQPWD,WILLTOPIC,1,false,WILLMESSAGE,true)) {
       Serial.println("Connected");
-
-      // Sólo me subscribo al 'set' de las propiedades
-      sprintf(data,"Homie/%s/+/+/Set",getName());
-      getClient()->subscribe(data);
     } else {
       Serial.print("Failed, rc=");
       Serial.print(getClient()->state());
@@ -207,11 +207,13 @@ Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, 
   DPRINTLN("<- Device.Device ");  
 };
 
+// Devuelve todos los Nodos/Dispositivos definidos.
 Node** Device::getChildren() {
 
   return children;
 }
 
+// Devuelve el número de Nodos/Dispositivos definidos.
 int Device::getNumChildren() {
 
   return n;
@@ -226,10 +228,12 @@ void Device::addChild(Node *node) {
   DPRINTLN("<- Device.addChild");
 }
 
+// Recupera un Nodo/Dispositivo por su índice
 Node *Device::getChild(int i) {
   return (i>n? NULL:children[i]);
 }
 
+// Recupera un Nodo/Dispositivo por su nombre
 Node *Device::getChild(char *name) {
   Node *node = NULL;
 
@@ -244,6 +248,10 @@ Node *Device::getChild(char *name) {
   return node;
 }
 
+// Método que procesa el mensaje recibido en un topic
+// y lo redirije a la entidad correspondiente
+// Es recursivo. Primero se extrae el dispositivo y 
+// luego el nodo.
 void Device::process(char *topic, char* value) {
   char name[16];
   Node *node;
@@ -269,6 +277,8 @@ void Device::process(char *topic, char* value) {
   DPRINTLN("<- Device.process");
 }
 
+// Gestiona la actualización de todos los nodos 
+// de un dispositivo.
 void Device::update() {
 
   DPRINTLN("-> Device.update");
@@ -284,6 +294,7 @@ void Device::update() {
   DPRINTLN("<- Device.update");
 }
 
+// Vuelca cada uno de los nodos de un dispositivo.
 void Device::dump() {
 
   DPRINTLN("-> Device.dump");
@@ -327,19 +338,23 @@ void Node::addProperty(Property *property) {
   
 }
 
+// Devuelve todas las propiedades definidas.
 Property** Node::getProperties() {
 
   return properties;
 }
 
+// Devuelve el número de propiedades definidas.
 int Node::getNumProperties() {
   return n;
 }
 
+// Recupera una propiedad de un nodo por su índice
 Property *Node::getProperty(int i) {
   return (i>n? NULL:properties[i]);
 }
 
+// Recupera una propiedad de un nodo por su nombre
 Property *Node::getProperty(char *name) {
   Property *prop = NULL;
   
@@ -354,6 +369,8 @@ Property *Node::getProperty(char *name) {
   return prop;
 }
 
+// Gestiona la actualización de todas las propiedades 
+// de un nodo.
 void Node::update() {
   
   DPRINTLN("-> Node.update");
@@ -370,6 +387,8 @@ void Node::update() {
   DPRINTLN("<- Node.update");
 }
 
+// Método que procesa el mensaje recibido en un topic
+// y lo redirije a la propiedad correspondiente
 void Node::process(char *topic, char *value) {
   char name[16];
   Property *prop;
@@ -390,6 +409,7 @@ void Node::process(char *topic, char *value) {
   DPRINTLN("<- Node.process");
 }
 
+// Vuelca cada uno de los nodos de un dispositivo.
 void Node::dump() {
 
   char data[96];
@@ -552,6 +572,66 @@ void Pressure::update() {
   setValue(value);
   
   DPRINTLN("<- Pressure.update");
+}
+
+Illuminance::Illuminance(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"Illuminance",(char *)"lx",(char *)"Float",false) {
+}
+
+void Illuminance::update() {
+
+  DPRINTLN("-> Illuminance.update");
+  
+  float value = ENV.readIlluminance();
+  Serial.print("Illuminance: ");
+  Serial.println(value);
+  setValue(value);
+  
+  DPRINTLN("<- Illuminance.update");
+}
+
+UVA::UVA(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UVA",(char *)"",(char *)"Float",false) {
+}
+
+void UVA::update() {
+
+  DPRINTLN("-> UVA.update");
+  
+  float value = ENV.readUVA();
+  Serial.print("UVA: ");
+  Serial.println(value);
+  setValue(value);
+  
+  DPRINTLN("<- UVA.update");
+}
+
+UVB::UVB(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UVB",(char *)"",(char *)"Float",false) {
+}
+
+void UVB::update() {
+
+  DPRINTLN("-> UVB.update");
+  
+  float value = ENV.readUVB();
+  Serial.print("UVB: ");
+  Serial.println(value);
+  setValue(value);
+  
+  DPRINTLN("<- UVB.update");
+}
+
+UVIndex::UVIndex(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UV Index",(char *)"",(char *)"Float",false) {
+}
+
+void UVIndex::update() {
+
+  DPRINTLN("-> UVIndex.update");
+
+  float value = ENV.readUVIndex();
+  Serial.print("UV Index: ");
+  Serial.println(value);
+  setValue(value);
+  
+  DPRINTLN("<- UVIndex.update");
 }
 
 Memory::Memory(PubSubClient *client, Node *parent) : Property(client, parent,(char *)"FreeMem",(char *)"KB",(char *)"Integer",false) {
