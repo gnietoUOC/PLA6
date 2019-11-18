@@ -34,6 +34,10 @@ void setup() {
   defineDevice();
   homie->dump();
 
+//  homie->clear();
+
+//  while (true);
+
   client->setCallback(callback);
   client->subscribe("Homie/+/+/+/Set");
   

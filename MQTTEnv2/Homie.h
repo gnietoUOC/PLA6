@@ -8,7 +8,7 @@
 #define NA              -1000
 #define SERVER          "192.168.0.173"
 #define MQPORT          1883           
-#define MQRETAIN        false
+#define MQRETAIN        true
 #define MQUSERNAME      "genaro"
 #define MQPWD           "passw0rd"
 #define WILLTOPIC       "MKR1000"
@@ -69,6 +69,7 @@ class Base {
     PubSubClient *getClient();
     virtual void update(){};
     virtual void dump(){};
+
     Attribute **getAttributes();
     int getNumAttributes();
     Attribute *getAttribute(char *name);
@@ -99,6 +100,7 @@ class Node : public Base {
     
     void update();
     void dump();
+    void clear();
 
   private: 
     int n;
@@ -120,7 +122,7 @@ class Device : public Node {
 
     void update();
     void dump();
-    
+    void clear();
 
   private: 
     int n;
@@ -153,6 +155,7 @@ class Property : public Base {
     
     void dump();
     void update();
+    void clear();
 
   private:
     float value;
@@ -165,7 +168,7 @@ class Temperature : public Property {
 
   public:
     Temperature(PubSubClient *client, Node *parent);
-    void update();
+    void update();  
 };
 
 class Humidity : public Property {

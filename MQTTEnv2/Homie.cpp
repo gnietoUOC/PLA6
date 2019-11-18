@@ -34,11 +34,15 @@ void Base::pub(char *tag,char *value) {
 
     if (tag!=NULL) {
       sprintf(data,"%s/%s",path,tag);
-      client->publish(data,value,MQRETAIN);
+      if (value!=NULL) {
+        client->publish(data,value,true);
+      } else {
+        client->publish(data,NULL,0,true);
+      }
       DPRINTLN(data);
       Serial.println(data);
     } else {
-      client->publish(path,value,MQRETAIN);
+      client->publish(path,value,false);
       DPRINTLN(path);
       Serial.println(path);
     } 
@@ -309,6 +313,22 @@ void Device::dump() {
   DPRINTLN("<- Device.dump");
 }
 
+// Limpia los mensajes retenidos de cada uno de los dispositivos.
+void Device::clear() {
+  
+  Serial.println("-> Device.clear");
+  Serial.print("Nodes: ");
+  Serial.println(getNumChildren());
+  Node** nn = getChildren();
+  for (int i=0;i<getNumChildren();i++) {
+    Node* n = nn[i];
+    if (n!=NULL) {
+      n->clear();
+    }
+  }
+  Serial.println("<- Device.clear");
+}
+
 Node::Node(PubSubClient *client, Device *parent, char* name) : Base(client, (Base *)parent, name) {
   
   n=0;
@@ -431,6 +451,22 @@ void Node::dump() {
   DPRINTLN("<- Node.dump");
 }
 
+// Limpia los mensajes retenidos de cada uno de las propiedades.
+void Node::clear() {
+  
+  Serial.println("-> Node.clear");
+  Property **pp = getProperties();
+  Serial.print("Properties: ");
+  Serial.println(getNumProperties());
+  for (int j=0;j<getNumProperties();j++) {
+    Property* p = pp[j];
+    if (p!=NULL) {
+      p->clear();
+    }
+  }
+  Serial.println("<- Node.clear");
+}
+
 Property::Property(PubSubClient *client, Node *parent, char *name, char *units, char *type, bool settable) : Base (client, parent,name) {
   parent->addProperty(this);
   value = NA;
@@ -527,6 +563,23 @@ void Property::dump() {
   Serial.println(data);
   
   DPRINTLN("<- Property.dump");
+}
+
+// Limpia los mensajes retenidos de cada uno de las propiedades.
+void Property::clear() {
+  char data[16];
+
+  Serial.println("-> Property.clear");
+  
+  Attribute **aa = getAttributes();
+  for (int j=0;j<getNumAttributes();j++) {
+    Attribute* a = aa[j];
+    if (a!=NULL) {
+      sprintf(data,"$%s",a->getName());
+      pub(data,NULL);
+    }
+  }
+  Serial.println("<- Property.clear");
 }
 
 Temperature::Temperature(PubSubClient *client, Node *parent) : Property(client, parent,(char *)"Temperature",(char *)"ºC",(char *)"Float",false) {
