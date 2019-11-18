@@ -9,26 +9,26 @@
 #define SERVER          "192.168.0.173"
 #define MQPORT          1883           
 #define MQRETAIN        false
-#define USERNAME        "genaro"
-#define PWD             "passw0rd"
+#define MQUSERNAME        "genaro"
+#define MQPWD             "passw0rd"
 #define WILLTOPIC       "MKR1000"
 #define WILLMESSAGE     "ATPC"
 
-#define CLIENT          "mkr1000"
-
-//#define MKCLOCK           48000000
-//#define MKPERIOD          1 // 1sg
+#define MQCLIENT          "mkr1000"
 #define MQPERIOD          1000 // 1sg
+
+#define PISSID  "Genaro0712"
+#define PIPWD   "passw0rd"
 
 #define ENV_PROPS       3
 
-//#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
-#ifdef DEBUG    //Macros are usually in all capital letters.
-  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
-  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
+//#define DEBUG   // Esta línea me permite activar o desactivar las trazas del código
+#ifdef DEBUG      
+  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT es un Serial.print
+  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN es un Serial.prinln
 #else
-  #define DPRINT(...)     //now defines a blank line
-  #define DPRINTLN(...)   //now defines a blank line
+  #define DPRINT(...)     //DPRINT es una línea en blanco
+  #define DPRINTLN(...)   //DRINTLN es una línea en blanco
 #endif
 
 #include <Arduino.h>

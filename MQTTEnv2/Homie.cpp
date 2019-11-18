@@ -1,17 +1,17 @@
 #include "Homie.h"
 #include "freeMemory.h"
 
-//#include <functional>
-
 Base::Base(PubSubClient *client, Base *parent, char* name) {
-//  Serial.println("-> Base(P,char)");
+  DPRINTLN("-> Base.Base");
+
   this->setParent(parent);
   this->setClient(client);
   this->setName(name);
-//  Serial.println("<- Base");
 
   n = 0;
   attributes = (Attribute**)calloc(MAX_ATTRIBUTES,sizeof(Attribute*));
+  
+  DPRINTLN("<- Base.Base");
 }
 
 char* Base::getName() {
@@ -31,8 +31,7 @@ void Base::pub(char *tag,char *value) {
   DPRINTLN("-> Base.pub");
   if (getClient()->connected()) {
     getPath(path);
-//    Serial.println(tag==NULL? "*NULL*":"");
-//    Serial.println(value);
+
     if (tag!=NULL) {
       sprintf(data,"%s/%s",path,tag);
       client->publish(data,value,MQRETAIN);
@@ -67,19 +66,20 @@ void Base::addAttribute(Attribute *attrib) {
   char data[16];
 
   DPRINTLN("-> Base.addAttribute");
-  attributes[n++] = attrib;
 
+  attributes[n++] = attrib;
   sprintf(data,"$%s",attrib->getName());
   pub(data,attrib->getCValue());
+
   DPRINTLN("<- Base.addAttribute");
 }
 
 Attribute *Base::getAttribute(char *name) {
-  DPRINTLN("-> Base.getAttribute");
   Attribute *a = NULL;
-  
+
+  DPRINTLN("-> Base.getAttribute");
+
   int n = getNumAttributes();
-  DPRINTLN(n);
   Attribute **aa = getAttributes(); 
   for (int i=0;i<n && a==NULL;i++) {
     Attribute *ai = aa[i];
@@ -89,6 +89,7 @@ Attribute *Base::getAttribute(char *name) {
       a = ai;
     }
   }
+
   DPRINTLN("<- Base.getAttribute");
   return a;
 }
@@ -103,8 +104,9 @@ PubSubClient *Base::getClient() {
 }
 
 void Base::getPath(char *path) {
-  DPRINTLN("-> Base.getPath");
   char data[96];
+
+  DPRINTLN("-> Base.getPath");
   
   if (getParent()) {
     getParent()->getPath(data);
@@ -112,7 +114,7 @@ void Base::getPath(char *path) {
   } else {
     sprintf(path,"%s",getName());
   }
-  DPRINTLN(path);
+
   DPRINTLN("<- Base.getPath");
 }
 
@@ -122,37 +124,12 @@ void Base::process(char *topic, char *payload) {
 
 Homie::Homie(PubSubClient *client) : Device(client, NULL,(char *)"Homie") {
   DPRINTLN("-> Homie.Homie");
+
   reconnect();
-//  client->setCallback(&Homie::callback);  
-//  client->setCallback([this](char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
-//   client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback([this](char* topic, uint8_t* payload, unsigned int length) { Serial.println("*");  });
-//  client->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
-//  client->setCallback(std::bind(&Homie:callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-//  using namespace std::placeholders;
-//  using std::placeholders::_1;
-//  using std::placeholders::_2;
-//  using std::placeholders::_3;
-//  client->setCallback(std::bind( &Homie::callback, this, _1,_2,_3));
-
-
-
+  
   DPRINTLN("<- Homie.Homie");
 }
 
-//Homie::Homie() {
-//  
-//}
-
-//Homie *Homie::getInstance(PubSubClient *client) {
-//Homie *Homie::getInstance() {
-//  static Homie homie(client1);
-//  return &homie;
-//}
-
-
-//void Homie::callback(char* topic, byte* payload, unsigned int length) {
 void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
   char data[64];
   char token[16];
@@ -164,22 +141,15 @@ void Homie::callback(char* topic, uint8_t* payload, unsigned int length) {
 
   Serial.print(topic);
   Serial.print(":");
-//  for (int i=0;i<length;i++) {
-//    Serial.print((char)payload[i]);
-//  }
-//  Serial.println();
-//  Serial.println(data);
-
   process(topic,data);
   
   DPRINTLN("-> Homie.callback");
-
 }
 
 void Homie::update() {
 
   DPRINTLN("-> Homie.update");
-//  Serial.println(getNumChildren());
+
   Device** dd = (Device **)getChildren();
   for (int i=0;i<getNumChildren();i++) {
     Device* d = dd[i];
@@ -187,6 +157,7 @@ void Homie::update() {
       d->update();
     }
   }
+
   DPRINTLN("<- Homie.update");
 }
 
@@ -204,19 +175,18 @@ void Homie::dump() {
 void Homie::reconnect() {
   char data[32];
   
-//  DPRINTLN("-> Homie.reconnect");
+  DPRINTLN("-> Homie.reconnect");
+
   // Reintentamos hasta conseguir conexión
   while (!getClient()->connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("Connecting MQTT...");
     // He modificado la conexión para definir un mensaje 'Last Will'
-    if (getClient()->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,false,WILLMESSAGE,true)) {
+    if (getClient()->connect(MQCLIENT,MQUSERNAME,MQPWD,WILLTOPIC,1,false,WILLMESSAGE,true)) {
       Serial.println("Connected");
-//      getClient()->setCallback(callback2);
-//      getClient()->subscribe("#");
+
       // Sólo me subscribo al 'set' de las propiedades
       sprintf(data,"Homie/%s/+/+/Set",getName());
       getClient()->subscribe(data);
-//      getClient()->setCallback(&Homie::callback);
     } else {
       Serial.print("Failed, rc=");
       Serial.print(getClient()->state());
@@ -224,11 +194,13 @@ void Homie::reconnect() {
       delay(5000);
     }
   }
-//  DPRINTLN("<- Homie.reconnect");
+
+  DPRINTLN("<- Homie.reconnect");
 }
 
 Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, parent, name) {
   DPRINTLN("-> Device.Device ");  
+  
   n=0;
   children = (Node**)calloc(MAX_NODES,sizeof(Node*));
 
@@ -277,60 +249,25 @@ void Device::process(char *topic, char* value) {
   Node *node;
   
   DPRINTLN("-> Device.process");
-//  Serial.println(topic);
+
   if (!strncmp(topic,"Homie/",6)) {
     topic += 6;
   }
   char *token = strchr(topic,'/');
-//  Serial.println(token);
   if (token!=NULL) {
     int n = token-topic;
     strncpy(name,topic,n);
     name[n]=0;
-//    Serial.println(name);
     node = getChild(name);
     if (node!=NULL) {
-//      Serial.println("Found!");
-//      ((Device *)node)->process(token+1,value);
       node->process(token+1,value);
     } else {
       Serial.println("Not found");
     }
-    
-//  } else {
-//     Serial.print("Property:");
-//     Serial.print("Property:");
-//    node = getChild(name);
-//    if (node!=NULL) {
-//      node2->process(token,value);
-//    }
   }
+
   DPRINTLN("<- Device.process");
 }
-
-
-/*
-Adafruit_ZeroTimer timer = Adafruit_ZeroTimer(4);
-
-void Device::init() {
-  // Ajustamos el valor del contador.
-  uint32_t compare = MKPERIOD*MKCLOCK/1024;
-
-  timer.enable(false);
-  // Ajustamos el valor del prescaler a 1024. Perdemos resolución (no
-  // podremos subir de unos 48KHz). En realidad, al poder utilizar 
-  // un contador de 32 bits no nos hace falta un prescaler. Lo podríamos 
-  // dejas en 1 (ajustando eso sí el valor del contador)
-  timer.configure(TC_CLOCK_PRESCALER_DIV1024,   // prescaler
-          TC_COUNTER_SIZE_32BIT,                // 32bis
-          TC_WAVE_GENERATION_MATCH_PWM          // PWM mode (sea lo que sea)
-          );
-  timer.setCompare(0, compare);
-  // Indicamos la funcion que se debe llamar cuando se produzca la interrupción
-  timer.setCallback(true, TC_CALLBACK_CC_CHANNEL0, this->update);
-  timer.enable(true);
-}
-*/
 
 void Device::update() {
 
@@ -344,14 +281,6 @@ void Device::update() {
     }
   }
 
-//  Property **pp = getProperties();
-//  for (int j=0;j<1;j++) {
-//    Property* p = pp[j];
-//    if (p!=NULL) {
-//      p->update();
-//    }
-//  }
-//    
   DPRINTLN("<- Device.update");
 }
 
@@ -446,20 +375,14 @@ void Node::process(char *topic, char *value) {
   Property *prop;
 
   DPRINTLN("-> Node.process");
-//  Serial.print(topic);
-//  Serial.print(":");
-//  Serial.println(value);
 
   char *token = strchr(topic,'/');
-//  Serial.println(token);
   if (token!=NULL) {
     int n = token-topic;
     strncpy(name,topic,n);
     name[n]=0;
-//    Serial.println(name);
     prop = getProperty(name);
     if (prop!=NULL) {
-//      Serial.println(name);
       prop->set(value);
     }
   }
@@ -505,7 +428,6 @@ void Property::set(char *value) {
   Serial.println("Not implemented");
 }
 
-//char *Property::getValue() {
 float Property::getValue() {
   char data[16];
     sprintf(data,"%ld",&value);           // Recuperamos la temperatura 
@@ -524,9 +446,8 @@ void Property::setValue(float value) {
     sprintf(data,"%.2f",value);            
     pub(NULL,data);
     this->value = value;
-//  } else {
-//    DPRINTLN("*");
 //  }
+
   DPRINTLN("<- Property.setValue");
 }
 
@@ -564,8 +485,6 @@ void Property::setBValue(bool bvalue) {
     sprintf(data,"%d",bvalue);            
     pub(NULL,data);
     this->bvalue = bvalue;
-  } else {
-    DPRINTLN("@");
   }
   DPRINTLN("<- Property.setBValue");
 }
@@ -578,24 +497,12 @@ void Property::update() {
 
 void Property::dump() {
 
-  DPRINTLN("-> Property.dump");
-
   char data[64];
   char path[64];
 
-//  Attribute *a = getAttribute((char *)"type");
-//  if (a!=NULL) {
-//    sprintf(data,"type: %s",a->getCValue());
-//    Serial.println(data);
-//  } else {
-//    Serial.println("Not found");
-//  }
+  DPRINTLN("-> Property.dump");
 
-//  sprintf(data,"-> dumpProperty [%s]",getName());
-//  Serial.println(data);
   getPath(path); 
-  
- // sprintf(data,"%s (%s) [%s]",getName(),getUnits(),path);
   sprintf(data,"%s [%s]",getName(),path);
   Serial.println(data);
   
@@ -608,10 +515,12 @@ Temperature::Temperature(PubSubClient *client, Node *parent) : Property(client, 
 void Temperature::update() {
 
   DPRINTLN("-> Temperature.update");
+
   float value = ENV.readTemperature();
   Serial.print("Temperature: ");
   Serial.println(value);
   setValue(value);
+
   DPRINTLN("<- Temperature.update");
 }
 
@@ -621,10 +530,12 @@ Humidity::Humidity(PubSubClient *client, Node *parent) : Property(client, parent
 void Humidity::update() {
 
   DPRINTLN("-> Humidity.update");
+  
   float value = ENV.readHumidity();
   Serial.print("Humidity: ");
   Serial.println(value);
   setValue(value);
+  
   DPRINTLN("<- Humidity.update");
 }
 
@@ -634,10 +545,12 @@ Pressure::Pressure(PubSubClient *client, Node *parent) : Property(client,parent,
 void Pressure::update() {
 
   DPRINTLN("-> Pressure.update");
+  
   float value = ENV.readPressure();
   Serial.print("Pressure: ");
   Serial.println(value);
   setValue(value);
+  
   DPRINTLN("<- Pressure.update");
 }
 
@@ -647,10 +560,12 @@ Memory::Memory(PubSubClient *client, Node *parent) : Property(client, parent,(ch
 void Memory::update() {
 
   DPRINTLN("-> Memory.update");
+  
   int value = freeMemory();
   Serial.print("Memory: ");
   Serial.println(value);
   setValue(value);
+  
   DPRINTLN("<- Memory.update");
 }
 
@@ -667,6 +582,7 @@ void LED::set(bool status) {
 
 void LED::set(char *value) {
   DPRINTLN("-> LED.set");
+  
   if (!strcmp(value,"ON")) {
     set(true);
   } else {
@@ -674,6 +590,7 @@ void LED::set(char *value) {
       set(false);
     }
   }
+  
   DPRINTLN("<- LED.set");
 }
 
@@ -707,19 +624,3 @@ int Attribute::getIValue() {
 
   return ivalue;
 }
-
-//HPubSubClient::HPubSubClient(Client& client) : PubSubClient(client) {
-//}
-//
-//void HPubSubClient::setHomie(Homie *homie) {
-//
-//  this->homie = homie;
-//}
-//
-//Homie *HPubSubClient::getHomie() {
-//   return homie;
-//}
-//
-//void HPubSubClient::callback(char* topic, uint8_t* payload, unsigned int length) {
-//  getHomie()->callback(topic,payload,length);
-//}
