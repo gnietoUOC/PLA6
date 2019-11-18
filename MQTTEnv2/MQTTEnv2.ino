@@ -2,17 +2,13 @@
 //#include <PubSubClient.h>
 
 #include "Homie.h"
-
+ 
 // Update these with values suitable for your network.
-
-#define SERVER      "192.168.0.173"
-#define MQPORT  1883           
-#define USERNAME    "genaro"
-#define PWD         "passw0rd"
-#define CLIENT      "mkr1000"
 
 #define WSSID  "Genaro0712"
 #define WPWD   "passw0rd"
+//#define WSSID  "vodafone2384"
+//#define WPWD   "g071268b260966"
 int status = WL_IDLE_STATUS;     
 
 //long lastMsg = 0;
@@ -22,7 +18,9 @@ unsigned long next;
 //bool ledStatus = false;
 //LED *l;
 
-WiFiClient wifiClient;
+//WiFiClient wifiClient;
+WiFiSSLClient wifiClient;
+//BearSSLClient sslClient(wifiClient);
 PubSubClient *client;
 
 // Objeto que gestionar el temporizador. Utilizamos el temporizador 4
@@ -32,7 +30,7 @@ PubSubClient *client;
 
 Homie *homie;
 
-//void callback(char* topic, byte* payload, unsigned int length) {
+//void callback(char*  topic, byte* payload, unsigned int length) {
 //  Serial.print("Message arrived [");
 //  Serial.print(topic);
 //  Serial.print("] ");
@@ -79,8 +77,15 @@ void setup() {
   connectWiFi();
   dumpWiFi();
 
+//  ArduinoBearSSL.onGetTime(getTime);
+
+//  wifiClient.connect(MQHOST,MQSSLPORT);
+
   client = new PubSubClient(wifiClient);
-  client->setServer(SERVER, MQPORT);
+//  client = new PubSubClient(sslClient);
+//  client->setServer(MQHOST, MQPORT);
+  client->setServer(MQHOST, MQSSLPORT);
+
 
   defineDevice();
   homie->dump();
@@ -152,6 +157,9 @@ void dumpWiFi() {
   Serial.print("Gateway IP:  ");
   Serial.println((IPAddress)WiFi.gatewayIP());
 
+//  Serial.print("DNS IP:  ");
+//  Serial.println((IPAddress)WiFi.getDNS());
+
 }
 
 void connectWiFi() {
@@ -163,6 +171,10 @@ void connectWiFi() {
     while (true);
   }
 
+  Serial.print("Firmware version is ");
+  Serial.println(WiFi.firmwareVersion());
+
+
   // Nos conectamos al AP (Raspberry)
   while ( status != WL_CONNECTED) {
     Serial.print(".");
@@ -171,6 +183,17 @@ void connectWiFi() {
     // Espero un poco antess de reintentar la conexión
     delay(5000);
   }
+
+//   if (wifiClient.connect(MQHOST, MQSSLPORT)) {
+//    Serial.println("SSL Connected");
+//   }
+
+//  WiFi.setDNS(dns);
+//  IPAddress mqtt
+//  WiFi.hostByName("gnf-ubuntu1804",mqtt);
+//  Serial.println("gnf-ubuntu1804: ");
+//  Serial.println(mqtt);
+  
   Serial.println("\nConnected.");
 }
 
@@ -205,6 +228,10 @@ void defineDevice() {
     Temperature *t = new Temperature(client, node);
     Humidity *h = new Humidity(client, node);
     Pressure *p = new Pressure(client, node);
+    Illuminance *i = new Illuminance(client, node);
+    UVA *ua = new UVA(client, node);
+    UVB *ub = new UVB(client, node);
+    UVIndex *u = new UVIndex(client, node);
   }
 
 
@@ -253,4 +280,9 @@ void start() {
 //  Serial.println("-> update");
 //  homie->update();
 //  Serial.println("<- update");
+//}
+
+//unsigned long getTime() {
+//  Serial.println("-> getTime");
+//  return WiFi.getTime();
 //}

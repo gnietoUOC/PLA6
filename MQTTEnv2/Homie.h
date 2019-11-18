@@ -6,21 +6,21 @@
 #define MAX_PROPERTIES  6
 #define MAX_ATTRIBUTES  4
 #define NA              -1000
-#define SERVER          "192.168.0.173"
+//#define MQHOST          "192.168.0.173"
+#define MQHOST          "gnf-ubuntu1804.gnf.com"
+//#define MQHOST          "test.mosquitto.org"
 #define MQPORT          1883           
+#define MQSSLPORT       8883           
 #define MQRETAIN        false
 #define USERNAME        "genaro"
 #define PWD             "passw0rd"
 #define WILLTOPIC       "MKR1000"
 #define WILLMESSAGE     "ATPC"
-
 #define CLIENT          "mkr1000"
 
 //#define MKCLOCK           48000000
 //#define MKPERIOD          1 // 1sg
 #define MQPERIOD          1000 // 1sg
-
-#define ENV_PROPS       3
 
 //#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
 #ifdef DEBUG    //Macros are usually in all capital letters.
@@ -36,6 +36,7 @@
 #include <PubSubClient.h>
 //#include "Adafruit_ZeroTimer.h"
 #include <Arduino_MKRENV.h>
+//#include <ArduinoBearSSL.h>
 
 class Homie;
 class Device;
@@ -194,6 +195,34 @@ class Pressure : public Property {
 
   public:
     Pressure(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class Illuminance : public Property {
+
+  public:
+    Illuminance(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVA : public Property {
+
+  public:
+    UVA(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVB : public Property {
+
+  public:
+    UVB(PubSubClient *client, Node *parent);
+    void update();
+};
+
+class UVIndex : public Property {
+
+  public:
+    UVIndex(PubSubClient *client, Node *parent);
     void update();
 };
 

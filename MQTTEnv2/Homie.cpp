@@ -210,6 +210,7 @@ void Homie::reconnect() {
     Serial.print("Attempting MQTT connection...");
     // He modificado la conexión para definir un mensaje 'Last Will'
     if (getClient()->connect(CLIENT,USERNAME,PWD,WILLTOPIC,1,false,WILLMESSAGE,true)) {
+//    if (getClient()->connect(CLIENT)) {
       Serial.println("Connected");
 //      getClient()->setCallback(callback2);
 //      getClient()->subscribe("#");
@@ -217,9 +218,9 @@ void Homie::reconnect() {
       sprintf(data,"Homie/%s/+/+/Set",getName());
       getClient()->subscribe(data);
 //      getClient()->setCallback(&Homie::callback);
-    } else {
+    } else { 
       Serial.print("Failed, rc=");
-      Serial.print(getClient()->state());
+      Serial.println(getClient()->state());
       // Wait 5 seconds before retrying
       delay(5000);
     }
@@ -639,6 +640,58 @@ void Pressure::update() {
   Serial.println(value);
   setValue(value);
   DPRINTLN("<- Pressure.update");
+}
+
+Illuminance::Illuminance(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"Illuminance",(char *)"lx",(char *)"Float",false) {
+}
+
+void Illuminance::update() {
+
+  DPRINTLN("-> Illuminance.update");
+  float value = ENV.readIlluminance();
+  Serial.print("Illuminance: ");
+  Serial.println(value);
+  setValue(value);
+  DPRINTLN("<- Illuminance.update");
+}
+
+UVA::UVA(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UVA",(char *)"",(char *)"Float",false) {
+}
+
+void UVA::update() {
+
+  DPRINTLN("-> UVA.update");
+  float value = ENV.readUVA();
+  Serial.print("UVA: ");
+  Serial.println(value);
+  setValue(value);
+  DPRINTLN("<- UVA.update");
+}
+
+UVB::UVB(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UVB",(char *)"",(char *)"Float",false) {
+}
+
+void UVB::update() {
+
+  DPRINTLN("-> UVB.update");
+  float value = ENV.readUVB();
+  Serial.print("UVB: ");
+  Serial.println(value);
+  setValue(value);
+  DPRINTLN("<- UVB.update");
+}
+
+UVIndex::UVIndex(PubSubClient *client, Node *parent) : Property(client,parent,(char *)"UV Index",(char *)"",(char *)"Float",false) {
+}
+
+void UVIndex::update() {
+
+  DPRINTLN("-> UVIndex.update");
+  float value = ENV.readUVIndex();
+  Serial.print("UV Index: ");
+  Serial.println(value);
+  setValue(value);
+  DPRINTLN("<- UVIndex.update");
 }
 
 Memory::Memory(PubSubClient *client, Node *parent) : Property(client, parent,(char *)"FreeMem",(char *)"KB",(char *)"Integer",false) {
