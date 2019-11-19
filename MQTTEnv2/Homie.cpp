@@ -60,8 +60,8 @@ void Base::logger(char *value) {
   RTCZero *rtc = getRTC();
   sprintf(data,"%4d/%2d/%2d %02d:%02d:%02d\t%s %s%s",
     rtc->getYear(),rtc->getMonth(),rtc->getDay(),rtc->getHours(),rtc->getMinutes(),rtc->getSeconds(),
-    name,value,getAttribute("units")->getCValue());
-  File f = SD.open("datalog.txt", FILE_WRITE);
+    name,value,getAttribute((char *)"units")->getCValue());
+  File f = SD.open("DATALOG.TXT", FILE_WRITE);
   if (f) {
     f.println(data);
     f.close();
@@ -89,7 +89,7 @@ RTCZero *Base::getRTC() {
     rtc->setHours(rtc->getHours()+TIMEZONE==24? 0:rtc->getHours()+TIMEZONE);
   }
   
-  DPRINTLN("-> Base.getRTC");
+  DPRINTLN("<- Base.getRTC");
   
   return rtc;
 }
