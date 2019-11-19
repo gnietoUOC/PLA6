@@ -43,11 +43,55 @@ void Base::pub(char *tag,char *value) {
       Serial.println(data);
     } else {
       client->publish(path,value,false);
-      DPRINTLN(path);
+      // Después de publicar el mensaje guardamos una entrada 
+      // en un fichero en la tarjeta
+      logger(value);
+
       Serial.println(path);
     } 
   }   
   DPRINTLN("<- Base.pub");
+}
+
+void Base::logger(char *value) {
+  char data[64];
+
+  DPRINTLN("-> Base.logger");
+  RTCZero *rtc = getRTC();
+  sprintf(data,"%4d/%2d/%2d %02d:%02d:%02d\t%s %s%s",
+    rtc->getYear(),rtc->getMonth(),rtc->getDay(),rtc->getHours(),rtc->getMinutes(),rtc->getSeconds(),
+    name,value,getAttribute("units")->getCValue());
+  File f = SD.open("datalog.txt", FILE_WRITE);
+  if (f) {
+    f.println(data);
+    f.close();
+  } else {
+    Serial.println(data);
+  }
+  DPRINTLN("-> Base.logger");
+}
+
+RTCZero* Base::rtc=0;
+RTCZero *Base::getRTC() {
+  unsigned long epoch=0;
+  
+  DPRINTLN("-> Base.getRTC");
+  
+  if (rtc==NULL) {
+    Serial.println("    Base.getRTC.INIT");
+    rtc = new RTCZero();
+    rtc->begin();
+    do {
+      epoch = WiFi.getTime();
+      delay(1000);
+    } while (epoch == 0);    
+    rtc->setEpoch(epoch);
+    rtc->setHours(rtc->getHours()+TIMEZONE==24? 0:rtc->getHours()+TIMEZONE);
+  }
+  
+  DPRINTLN("-> Base.getRTC");
+  
+  return rtc;
 }
 
 void Base::setParent(Base *parent) {
@@ -316,7 +360,7 @@ void Device::dump() {
 // Limpia los mensajes retenidos de cada uno de los dispositivos.
 void Device::clear() {
   
-  Serial.println("-> Device.clear");
+  DPRINTLN("-> Device.clear");
   Serial.print("Nodes: ");
   Serial.println(getNumChildren());
   Node** nn = getChildren();
@@ -326,7 +370,7 @@ void Device::clear() {
       n->clear();
     }
   }
-  Serial.println("<- Device.clear");
+  DPRINTLN("-> Device.clear");
 }
 
 Node::Node(PubSubClient *client, Device *parent, char* name) : Base(client, (Base *)parent, name) {
@@ -454,7 +498,7 @@ void Node::dump() {
 // Limpia los mensajes retenidos de cada uno de las propiedades.
 void Node::clear() {
   
-  Serial.println("-> Node.clear");
+  DPRINTLN("-> Node.clear");
   Property **pp = getProperties();
   Serial.print("Properties: ");
   Serial.println(getNumProperties());
@@ -464,7 +508,7 @@ void Node::clear() {
       p->clear();
     }
   }
-  Serial.println("<- Node.clear");
+  DPRINTLN("-> Node.clear");
 }
 
 Property::Property(PubSubClient *client, Node *parent, char *name, char *units, char *type, bool settable) : Base (client, parent,name) {
@@ -569,7 +613,7 @@ void Property::dump() {
 void Property::clear() {
   char data[16];
 
-  Serial.println("-> Property.clear");
+  DPRINTLN("-> Property.clear");
   
   Attribute **aa = getAttributes();
   for (int j=0;j<getNumAttributes();j++) {
@@ -579,7 +623,7 @@ void Property::clear() {
       pub(data,NULL);
     }
   }
-  Serial.println("<- Property.clear");
+  DPRINTLN("-> Property.clear");
 }
 
 Temperature::Temperature(PubSubClient *client, Node *parent) : Property(client, parent,(char *)"Temperature",(char *)"ºC",(char *)"Float",false) {

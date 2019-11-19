@@ -20,6 +20,8 @@
 #define PISSID  "Genaro0712"
 #define PIPWD   "passw0rd"
 
+#define TIMEZONE        1
+
 #define ENV_PROPS       3
 
 //#define DEBUG   // Esta línea me permite activar o desactivar las trazas del código
@@ -35,6 +37,8 @@
 #include <WiFi101.h>
 #include <PubSubClient.h>
 #include <Arduino_MKRENV.h>
+#include <SD.h>
+#include <RTCZero.h>
 
 class Homie;
 class Device;
@@ -79,12 +83,18 @@ class Base {
     void process(char *topic,char *payload);
     void pub(char *tag, char *value);
 
+    static RTCZero *getRTC();
+
   private:
     char* name;
     Base *parent;
     PubSubClient *client;
     int n;
     Attribute **attributes;
+    void logger(char *value);
+    static RTCZero *rtc;
+
+
 };
 
 class Node : public Base {

@@ -25,6 +25,9 @@ void setup() {
   
   Serial.println("*** MKR1000 ***");
 
+  // Inicializamos la tarjeta 
+  SD.begin(4);
+  
   connectWiFi();
   dumpWiFi();
 
