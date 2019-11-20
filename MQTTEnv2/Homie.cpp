@@ -40,14 +40,11 @@ void Base::pub(char *tag,char *value) {
         client->publish(data,NULL,0,true);
       }
       DPRINTLN(data);
-      Serial.println(data);
     } else {
       client->publish(path,value,false);
       // Después de publicar el mensaje guardamos una entrada 
       // en un fichero en la tarjeta
       logger(value);
-
-      Serial.println(path);
     } 
   }   
   DPRINTLN("<- Base.pub");
@@ -252,6 +249,9 @@ Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, 
   n=0;
   children = (Node**)calloc(MAX_NODES,sizeof(Node*));
 
+  addAttribute(new Attribute((char *)"homie","3.0"));
+  addAttribute(new Attribute((char *)"state","ready"));
+
   DPRINTLN("<- Device.Device ");  
 };
 
@@ -268,11 +268,22 @@ int Device::getNumChildren() {
 }
 
 void Device::addChild(Node *node) {
+  char data[64];
+    
   DPRINTLN("-> Device.addChild");
 
   node->setParent(this);
   children[n++] = node;
 
+  strcpy(data,children[0]->getName());
+  if (n>1) {
+    for (int i=1;i<n;i++) {
+      strcat(data,",");
+      strcat(data,children[i]->getName());
+    }
+  }
+  pub((char *)"$nodes",data);
+  
   DPRINTLN("<- Device.addChild");
 }
 

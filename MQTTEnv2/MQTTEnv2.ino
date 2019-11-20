@@ -32,7 +32,8 @@ void setup() {
   dumpWiFi();
 
   RTCZero *rtc = Base::getRTC();
-  rtc->setAlarmTime(rtc->getHours(), rtc->getMinutes(), 00);
+//  rtc->setAlarmTime(rtc->getHours(), rtc->getMinutes(), 00);
+  rtc->setAlarmTime(23,59,00);
   rtc->enableAlarm(rtc->MATCH_HHMMSS); 
   rtc->attachInterrupt(clearLog); 
 
