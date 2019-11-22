@@ -17,8 +17,10 @@
 #define MQCLIENT          "mkr1000"
 #define MQPERIOD          1000 // 1sg
 
-#define PISSID  "Genaro0712"
-#define PIPWD   "passw0rd"
+//#define PISSID  "Genaro0712"
+//#define PIPWD   "passw0rd"
+#define PISSID  "vodafone2384"
+#define PIPWD   "g071268b260966"
 
 #define TIMEZONE        1
 

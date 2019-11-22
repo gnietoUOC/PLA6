@@ -249,8 +249,8 @@ Device::Device(PubSubClient *client, Device *parent, char *name) : Node(client, 
   n=0;
   children = (Node**)calloc(MAX_NODES,sizeof(Node*));
 
-  addAttribute(new Attribute((char *)"homie","3.0"));
-  addAttribute(new Attribute((char *)"state","ready"));
+  addAttribute(new Attribute((char *)"homie",(char *)"3.0"));
+  addAttribute(new Attribute((char *)"state",(char *)"ready"));
 
   DPRINTLN("<- Device.Device ");  
 };
